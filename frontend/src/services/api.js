@@ -20,10 +20,20 @@ export const gmailApi = {
     apiClient.get(`/connect-gmail?write_access=${writeAccess}`),
 };
 
-export const scanApi = {
-  triggerScan: (userId = 'demo-user-1', limit = 500) => {
+export const profileApi = {
+  getStats: (userId = 'demo-user-1') => {
     const token = localStorage.getItem('gmail_token') || '';
-    return apiClient.post(`/scan?user_id=${userId}&token=${encodeURIComponent(token)}&limit=${limit}`);
+    return apiClient.get(`/profile/stats?user_id=${userId}&token=${encodeURIComponent(token)}`);
+  },
+};
+
+export const scanApi = {
+  triggerScan: (userId = 'demo-user-1', limit = 500, fromDate = null, toDate = null) => {
+    const token = localStorage.getItem('gmail_token') || '';
+    let url = `/scan?user_id=${userId}&token=${encodeURIComponent(token)}&limit=${limit}`;
+    if (fromDate) url += `&from_date=${encodeURIComponent(fromDate)}`;
+    if (toDate) url += `&to_date=${encodeURIComponent(toDate)}`;
+    return apiClient.post(url);
   },
   getScanStatus: () => 
     apiClient.get('/scan/status'),
@@ -32,6 +42,8 @@ export const scanApi = {
 export const categoriesApi = {
   getCategories: (userId = 'demo-user-1') => 
     apiClient.get(`/categories?user_id=${userId}`),
+  getClusterEmails: (clusterId) => 
+    apiClient.get(`/categories/${encodeURIComponent(clusterId)}/emails`),
 };
 
 export const actionsApi = {

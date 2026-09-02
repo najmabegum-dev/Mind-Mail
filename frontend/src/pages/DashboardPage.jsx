@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
   Sparkles, RefreshCw, FolderSearch, CheckCircle2, ShieldCheck, 
-  Archive, Trash2, Filter, HardDrive, Mail, Layers 
+  Archive, Trash2, Filter, HardDrive, Mail, Layers, Calendar, ChevronDown 
 } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import FolderCard from '../components/FolderCard';
@@ -10,7 +10,8 @@ import ScanningVisualizer from '../components/ScanningVisualizer';
 import ActionQueueModal from '../components/ActionQueueModal';
 import FeedbackWidget from '../components/FeedbackWidget';
 import StatsLeaderboard from '../components/StatsLeaderboard';
-import { scanApi, categoriesApi, actionsApi } from '../services/api';
+import EmailInspectorDrawer from '../components/EmailInspectorDrawer';
+import { scanApi, categoriesApi, actionsApi, profileApi } from '../services/api';
 
 export default function DashboardPage({ user, onLogout }) {
   const [categories, setCategories] = useState([]);
@@ -19,10 +20,21 @@ export default function DashboardPage({ user, onLogout }) {
   const [scanProgress, setScanProgress] = useState(0);
   const [scanMessage, setScanMessage] = useState('Initializing agent scan...');
   const [emailsScanned, setEmailsScanned] = useState(0);
-  
-  const [selectedLimit, setSelectedLimit] = useState(500);
-  
-  // Modals state
+
+  // Real-time Gmail Account Telemetry
+  const [realStats, setRealStats] = useState(null);
+
+  // Date Range Filtering State
+  const [datePreset, setDatePreset] = useState('last30');
+  const [fromDate, setFromDate] = useState(() => {
+    const d = new Date();
+    d.setDate(d.getDate() - 30);
+    return d.toISOString().split('T')[0];
+  });
+  const [toDate, setToDate] = useState(() => new Date().toISOString().split('T')[0]);
+  const [showCustomDates, setShowCustomDates] = useState(false);
+
+  // Modals & Drawer State
   const [selectedCategoryForAction, setSelectedCategoryForAction] = useState(null);
   const [isActionModalOpen, setIsActionModalOpen] = useState(false);
   const [isExecutingAction, setIsExecutingAction] = useState(false);
@@ -30,6 +42,22 @@ export default function DashboardPage({ user, onLogout }) {
   const [isStatsOpen, setIsStatsOpen] = useState(false);
   const [activeFilter, setActiveFilter] = useState('all');
   const [toastMessage, setToastMessage] = useState(null);
+
+  // Email Inspector State
+  const [inspectCluster, setInspectCluster] = useState(null);
+  const [isInspectDrawerOpen, setIsInspectDrawerOpen] = useState(false);
+
+  // Fetch real account stats
+  const fetchProfileStats = async () => {
+    try {
+      const res = await profileApi.getStats(user?.id || 'demo-user-1');
+      if (res.data) {
+        setRealStats(res.data);
+      }
+    } catch (err) {
+      console.error("Failed to fetch live profile telemetry:", err);
+    }
+  };
 
   const fetchCategories = async () => {
     try {
@@ -44,17 +72,53 @@ export default function DashboardPage({ user, onLogout }) {
   };
 
   useEffect(() => {
+    fetchProfileStats();
     fetchCategories();
   }, []);
+
+  const handleDatePresetChange = (preset) => {
+    setDatePreset(preset);
+    const now = new Date();
+    const todayStr = now.toISOString().split('T')[0];
+
+    if (preset === 'last7') {
+      const d = new Date();
+      d.setDate(d.getDate() - 7);
+      setFromDate(d.toISOString().split('T')[0]);
+      setToDate(todayStr);
+      setShowCustomDates(false);
+    } else if (preset === 'last30') {
+      const d = new Date();
+      d.setDate(d.getDate() - 30);
+      setFromDate(d.toISOString().split('T')[0]);
+      setToDate(todayStr);
+      setShowCustomDates(false);
+    } else if (preset === 'last90') {
+      const d = new Date();
+      d.setDate(d.getDate() - 90);
+      setFromDate(d.toISOString().split('T')[0]);
+      setToDate(todayStr);
+      setShowCustomDates(false);
+    } else if (preset === 'year1') {
+      const d = new Date();
+      d.setDate(d.getDate() - 365);
+      setFromDate(''); // No lower bound
+      setToDate(d.toISOString().split('T')[0]); // Before 1 year ago
+      setShowCustomDates(false);
+    } else if (preset === 'custom') {
+      setShowCustomDates(true);
+    }
+  };
 
   const triggerScan = async () => {
     setIsScanning(true);
     setScanProgress(5);
-    setScanMessage(`Connecting to Gmail for ${selectedLimit} emails...`);
+    const rangeLabel = fromDate || toDate ? `${fromDate || 'Start'} to ${toDate || 'Present'}` : 'selected timeframe';
+    setScanMessage(`Connecting to Gmail for ${rangeLabel}...`);
     setEmailsScanned(0);
 
     try {
-      await scanApi.triggerScan(user?.id || 'demo-user-1', selectedLimit);
+      await scanApi.triggerScan(user?.id || 'demo-user-1', 1000, fromDate || null, toDate || null);
 
       // Poll scan status until completion
       const interval = setInterval(async () => {
@@ -70,7 +134,8 @@ export default function DashboardPage({ user, onLogout }) {
             setTimeout(() => {
               setIsScanning(false);
               fetchCategories();
-              showToast("Scan completed! Discovered new narrative clusters.");
+              fetchProfileStats();
+              showToast("Scan completed! Discovered structured clusters.");
             }, 800);
           } else if (data.status === 'failed') {
             clearInterval(interval);
@@ -97,6 +162,11 @@ export default function DashboardPage({ user, onLogout }) {
     setIsActionModalOpen(true);
   };
 
+  const handleInspectCluster = (cat) => {
+    setInspectCluster(cat);
+    setIsInspectDrawerOpen(true);
+  };
+
   const handleExecuteAction = async (clusterId, action) => {
     setIsExecutingAction(true);
     try {
@@ -107,8 +177,9 @@ export default function DashboardPage({ user, onLogout }) {
       });
       setIsActionModalOpen(false);
       showToast(res.data.message || "Action executed successfully.");
-      // Refresh categories list
+      // Refresh categories and account stats
       fetchCategories();
+      fetchProfileStats();
     } catch (err) {
       console.error("Action error:", err);
       showToast("Could not complete action.");
@@ -117,10 +188,11 @@ export default function DashboardPage({ user, onLogout }) {
     }
   };
 
-  // Aggregate stats across discovered categories
-  const totalEmails = categories.reduce((acc, c) => acc + c.total_count, 0);
-  const totalUnread = categories.reduce((acc, c) => acc + c.unread_count, 0);
-  const totalStorageMb = categories.reduce((acc, c) => acc + c.estimated_size_mb, 0).toFixed(1);
+  // Aggregated or Live Metrics
+  const totalEmailsCount = realStats?.total_messages ?? categories.reduce((acc, c) => acc + c.total_count, 0);
+  const totalUnreadCount = realStats?.unread_messages ?? categories.reduce((acc, c) => acc + c.unread_count, 0);
+  const totalOpenedCount = realStats?.read_messages ?? Math.max(0, totalEmailsCount - totalUnreadCount);
+  const totalStorageMb = realStats?.estimated_storage_mb ?? categories.reduce((acc, c) => acc + c.estimated_size_mb, 0).toFixed(1);
 
   // Filtered categories
   const filteredCategories = categories.filter((c) => {
@@ -153,55 +225,93 @@ export default function DashboardPage({ user, onLogout }) {
           </motion.div>
         )}
 
-        {/* Hero & Quick Actions Banner */}
-        <div className="bg-slate-900/60 border border-slate-800/80 rounded-3xl p-6 sm:p-8 flex flex-col md:flex-row md:items-center justify-between gap-6">
+        {/* Hero & Date Range Calendar Banner */}
+        <div className="bg-slate-900/60 border border-slate-800/80 rounded-3xl p-6 sm:p-8 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
           <div>
             <div className="flex items-center gap-2 mb-2">
               <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                Gmail Connected (Read-Only)
+                Gmail Live Connected ({realStats?.email_address || 'Read-Only'})
               </span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
               Inbox Intelligence Dashboard
             </h1>
             <p className="text-xs sm:text-sm text-slate-400 mt-1 max-w-xl">
-              Semantic clusters and narrative AI summaries. Review suggestions safely before applying any actions.
+              Strict brand separation, sender-by-sender contextual digests, and one-click actions.
             </p>
           </div>
 
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-            <div className="flex items-center justify-between sm:justify-start gap-1 bg-slate-950/80 p-1 rounded-2xl border border-slate-800 text-xs">
-              <span className="text-[11px] text-slate-400 pl-2 pr-1 font-medium">Scan Limit:</span>
-              {[200, 500, 1000].map((num) => (
+          {/* Date Range Selector & Trigger */}
+          <div className="flex flex-col gap-3 bg-slate-950/60 p-3 rounded-2xl border border-slate-800">
+            <div className="flex flex-wrap items-center gap-1 text-xs">
+              <span className="text-[11px] text-slate-400 pl-1 pr-1 font-medium flex items-center gap-1">
+                <Calendar className="w-3.5 h-3.5 text-indigo-400" />
+                <span>Date Range:</span>
+              </span>
+
+              {[
+                { id: 'last7', label: '7 Days' },
+                { id: 'last30', label: '30 Days' },
+                { id: 'last90', label: '90 Days' },
+                { id: 'year1', label: '> 1 Year' },
+                { id: 'custom', label: 'Custom Calendar' }
+              ].map((p) => (
                 <button
-                  key={num}
+                  key={p.id}
                   type="button"
-                  onClick={() => setSelectedLimit(num)}
-                  disabled={isScanning}
-                  className={`px-2.5 py-1 rounded-xl text-xs font-semibold transition ${
-                    selectedLimit === num
-                      ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20'
-                      : 'text-slate-400 hover:text-white'
+                  onClick={() => handleDatePresetChange(p.id)}
+                  className={`px-2.5 py-1 rounded-xl text-xs font-medium transition ${
+                    datePreset === p.id 
+                      ? 'bg-indigo-600 text-white shadow' 
+                      : 'text-slate-400 hover:text-white hover:bg-slate-900'
                   }`}
                 >
-                  {num} Mails
+                  {p.label}
                 </button>
               ))}
             </div>
 
+            {/* Custom Date Inputs (shown when custom selected or toggleable) */}
+            {(showCustomDates || datePreset === 'custom') && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                className="flex items-center gap-2 pt-1 border-t border-slate-800/80 text-xs"
+              >
+                <div className="flex items-center gap-1 bg-slate-900 px-2.5 py-1 rounded-xl border border-slate-800">
+                  <span className="text-slate-500 text-[10px]">From:</span>
+                  <input
+                    type="date"
+                    value={fromDate}
+                    onChange={(e) => setFromDate(e.target.value)}
+                    className="bg-transparent text-white text-xs focus:outline-none"
+                  />
+                </div>
+                <div className="flex items-center gap-1 bg-slate-900 px-2.5 py-1 rounded-xl border border-slate-800">
+                  <span className="text-slate-500 text-[10px]">To:</span>
+                  <input
+                    type="date"
+                    value={toDate}
+                    onChange={(e) => setToDate(e.target.value)}
+                    className="bg-transparent text-white text-xs focus:outline-none"
+                  />
+                </div>
+              </motion.div>
+            )}
+
             <button
               onClick={triggerScan}
               disabled={isScanning}
-              className="px-5 py-2.5 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/20 disabled:opacity-50 transition transform active:scale-95"
+              className="w-full py-2.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/20 disabled:opacity-50 transition transform active:scale-95"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${isScanning ? 'animate-spin' : ''}`} />
-              <span>{isScanning ? 'Scanning in Progress...' : `Scan ${selectedLimit} Emails`}</span>
+              <span>{isScanning ? 'Scanning Inbox Range...' : 'Scan Selected Range'}</span>
             </button>
           </div>
         </div>
 
-        {/* Live Scanning Visualizer (Active during scan) */}
+        {/* Live Scanning Visualizer */}
         {isScanning && (
           <ScanningVisualizer
             progress={scanProgress}
@@ -210,15 +320,15 @@ export default function DashboardPage({ user, onLogout }) {
           />
         )}
 
-        {/* Metrics Bar */}
+        {/* Live Account-Wide Metrics Bar */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="bg-slate-900/80 border border-slate-800 p-4 rounded-2xl">
             <div className="flex items-center justify-between text-slate-400 text-xs mb-1">
-              <span>Emails Analyzed</span>
+              <span>Total Inbox Messages</span>
               <Mail className="w-4 h-4 text-indigo-400" />
             </div>
-            <span className="text-2xl font-bold text-white font-mono">{totalEmails.toLocaleString()}</span>
-            <p className="text-[11px] text-slate-500 mt-0.5">Across all clusters</p>
+            <span className="text-2xl font-bold text-white font-mono">{totalEmailsCount.toLocaleString()}</span>
+            <p className="text-[11px] text-slate-500 mt-0.5">Real Gmail account total</p>
           </div>
 
           <div className="bg-slate-900/80 border border-slate-800 p-4 rounded-2xl">
@@ -226,9 +336,9 @@ export default function DashboardPage({ user, onLogout }) {
               <span>Unopened Backlog</span>
               <FolderSearch className="w-4 h-4 text-amber-400" />
             </div>
-            <span className="text-2xl font-bold text-amber-300 font-mono">{totalUnread.toLocaleString()}</span>
+            <span className="text-2xl font-bold text-amber-300 font-mono">{totalUnreadCount.toLocaleString()}</span>
             <p className="text-[11px] text-slate-500 mt-0.5">
-              {totalEmails > 0 ? `${Math.round((totalUnread / totalEmails) * 100)}% unopened` : '0%'}
+              {totalEmailsCount > 0 ? `${Math.round((totalUnreadCount / totalEmailsCount) * 100)}% unread rate` : '0%'}
             </p>
           </div>
 
@@ -238,16 +348,16 @@ export default function DashboardPage({ user, onLogout }) {
               <HardDrive className="w-4 h-4 text-purple-400" />
             </div>
             <span className="text-2xl font-bold text-white font-mono">{totalStorageMb} MB</span>
-            <p className="text-[11px] text-slate-500 mt-0.5">Reclaimable space</p>
+            <p className="text-[11px] text-slate-500 mt-0.5">Footprint in mailbox</p>
           </div>
 
           <div className="bg-slate-900/80 border border-slate-800 p-4 rounded-2xl">
             <div className="flex items-center justify-between text-slate-400 text-xs mb-1">
-              <span>Clusters Discovered</span>
+              <span>Discovered Clusters</span>
               <Layers className="w-4 h-4 text-emerald-400" />
             </div>
             <span className="text-2xl font-bold text-emerald-300 font-mono">{categories.length}</span>
-            <p className="text-[11px] text-slate-500 mt-0.5">Zero hardcoded rules</p>
+            <p className="text-[11px] text-slate-500 mt-0.5">Isolated brand groupings</p>
           </div>
         </div>
 
@@ -255,38 +365,44 @@ export default function DashboardPage({ user, onLogout }) {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-4 border-t border-slate-800/80">
           <div>
             <h2 className="text-lg font-bold text-white tracking-tight flex items-center gap-2">
-              <span>Discovered Clusters & Narratives</span>
+              <span>Discovered Brand Clusters</span>
               <span className="text-xs px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 border border-slate-700">
                 {filteredCategories.length}
               </span>
             </h2>
             <p className="text-xs text-slate-400 mt-0.5">
-              Organic semantic groups extracted via LangGraph multi-agent pipeline
+              Each card contains structured sender bullet points with specific contextual digests.
             </p>
           </div>
 
-          {/* Filter Pills */}
-          <div className="flex items-center gap-1.5 bg-slate-900 p-1 rounded-xl border border-slate-800 text-xs">
+          {/* Filter Tabs */}
+          <div className="flex items-center gap-1.5 bg-slate-900/80 p-1 rounded-2xl border border-slate-800 self-start sm:self-auto">
             <button
               onClick={() => setActiveFilter('all')}
-              className={`px-3 py-1 rounded-lg transition ${
-                activeFilter === 'all' ? 'bg-indigo-600 text-white font-medium' : 'text-slate-400 hover:text-white'
+              className={`px-3 py-1.5 rounded-xl text-xs font-medium transition ${
+                activeFilter === 'all' 
+                  ? 'bg-indigo-600 text-white shadow' 
+                  : 'text-slate-400 hover:text-white'
               }`}
             >
               All Clusters
             </button>
             <button
               onClick={() => setActiveFilter('actionable')}
-              className={`px-3 py-1 rounded-lg transition ${
-                activeFilter === 'actionable' ? 'bg-indigo-600 text-white font-medium' : 'text-slate-400 hover:text-white'
+              className={`px-3 py-1.5 rounded-xl text-xs font-medium transition ${
+                activeFilter === 'actionable' 
+                  ? 'bg-indigo-600 text-white shadow' 
+                  : 'text-slate-400 hover:text-white'
               }`}
             >
               Actionable (Archive/Trash)
             </button>
             <button
               onClick={() => setActiveFilter('keep')}
-              className={`px-3 py-1 rounded-lg transition ${
-                activeFilter === 'keep' ? 'bg-indigo-600 text-white font-medium' : 'text-slate-400 hover:text-white'
+              className={`px-3 py-1.5 rounded-xl text-xs font-medium transition ${
+                activeFilter === 'keep' 
+                  ? 'bg-indigo-600 text-white shadow' 
+                  : 'text-slate-400 hover:text-white'
               }`}
             >
               Keep in Inbox
@@ -294,48 +410,60 @@ export default function DashboardPage({ user, onLogout }) {
           </div>
         </div>
 
-        {/* Category Cards Grid */}
+        {/* Categories Grid */}
         {loadingCategories ? (
-          <div className="py-20 text-center">
-            <RefreshCw className="w-8 h-8 text-indigo-400 animate-spin mx-auto mb-3" />
-            <p className="text-xs text-slate-400">Loading clusters & narrative summaries...</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[1, 2, 3, 4, 5, 6].map((n) => (
+              <div key={n} className="h-64 rounded-2xl bg-slate-900/40 border border-slate-800 animate-pulse" />
+            ))}
           </div>
         ) : filteredCategories.length === 0 ? (
-          <div className="py-16 text-center bg-slate-900/40 rounded-3xl border border-slate-800">
-            <FolderSearch className="w-10 h-10 text-slate-600 mx-auto mb-3" />
-            <h3 className="text-sm font-semibold text-slate-300">No clusters found for this filter</h3>
-            <p className="text-xs text-slate-500 mt-1">Try selecting "All Clusters" or rerun an agent scan.</p>
+          <div className="text-center py-20 bg-slate-900/30 rounded-3xl border border-slate-800/80">
+            <FolderSearch className="w-12 h-12 text-slate-600 mx-auto mb-3" />
+            <h3 className="text-base font-semibold text-slate-300">No clusters found in this filter</h3>
+            <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
+              Run a scan or switch filters to view your structured email clusters.
+            </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-            {filteredCategories.map((cat) => (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredCategories.map((category) => (
               <FolderCard
-                key={cat.cluster_id}
-                category={cat}
+                key={category.cluster_id}
+                category={category}
                 onSelectAction={handleOpenActionModal}
+                onInspect={handleInspectCluster}
               />
             ))}
           </div>
         )}
-
       </main>
 
-      {/* Action Approval Queue Modal */}
+      {/* Action Queue Confirmation Modal */}
       <ActionQueueModal
         category={selectedCategoryForAction}
         isOpen={isActionModalOpen}
-        onClose={() => setIsActionModalOpen(false)}
-        onExecuteAction={handleExecuteAction}
         isExecuting={isExecutingAction}
+        onClose={() => setIsActionModalOpen(false)}
+        onConfirm={handleExecuteAction}
+      />
+
+      {/* Interactive Email Inspector Drawer */}
+      <EmailInspectorDrawer
+        cluster={inspectCluster}
+        isOpen={isInspectDrawerOpen}
+        onClose={() => setIsInspectDrawerOpen(false)}
+        onSelectAction={handleOpenActionModal}
       />
 
       {/* Feedback Widget Modal */}
       <FeedbackWidget
         isOpen={isFeedbackOpen}
         onClose={() => setIsFeedbackOpen(false)}
+        onSubmitSuccess={() => showToast("Feedback submitted. Thank you!")}
       />
 
-      {/* Stats Leaderboard Modal */}
+      {/* Storage & Action Stats Modal */}
       <StatsLeaderboard
         isOpen={isStatsOpen}
         onClose={() => setIsStatsOpen(false)}
