@@ -51,6 +51,8 @@ class CategorySummary(BaseModel):
     confidence_score: float
     sample_senders: List[str]
     estimated_size_mb: float
+    sender_breakdown: List[Dict[str, Any]] = []
+    primary_intent: str = "general"
 
 class ScanStatusResponse(BaseModel):
     status: str # "idle", "ingesting", "clustering", "analyzing", "completed", "failed"

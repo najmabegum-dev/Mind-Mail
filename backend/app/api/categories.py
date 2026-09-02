@@ -45,7 +45,24 @@ async def get_categories(user_id: str = "demo-user-1"):
             suggested_action=c_data.get("suggested_action", "keep"),
             confidence_score=c_data.get("confidence_score", 0.90),
             sample_senders=senders,
-            estimated_size_mb=c_data.get("estimated_size_mb", 12.5)
+            estimated_size_mb=c_data.get("estimated_size_mb", 12.5),
+            sender_breakdown=c_data.get("sender_breakdown", []),
+            primary_intent=c_data.get("primary_intent", "general")
         ))
 
     return results
+
+@router.get("/categories/{cluster_id}/emails")
+async def get_cluster_emails(cluster_id: str):
+    """
+    Returns full list of emails within a cluster for the interactive Email Inspector Drawer.
+    """
+    pipeline_output = mock_db.get("last_pipeline_output", {})
+    clusters = pipeline_output.get("clusters", {})
+    cluster = clusters.get(cluster_id)
+    if not cluster:
+        return []
+    
+    # Return sorted by date descending
+    emails = cluster.get("emails", [])
+    return emails
