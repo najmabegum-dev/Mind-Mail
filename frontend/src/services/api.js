@@ -37,6 +37,8 @@ export const scanApi = {
   },
   getScanStatus: () => 
     apiClient.get('/scan/status'),
+  getRangeMetrics: () => 
+    apiClient.get('/scan/range-metrics'),
 };
 
 export const categoriesApi = {

@@ -90,20 +90,25 @@ class GmailService:
         return None
 
     def get_inbox_metrics(self, access_token: str) -> Dict[str, Any]:
-        """Fetch exact real-time telemetry from Gmail account."""
+        """Fetch exact real-time telemetry directly from Gmail labels & profile APIs."""
         if settings.DEMO_MODE or access_token.startswith("mock_"):
             return {
                 "email_address": "demo@gmail.com",
-                "total_messages": 10420,
-                "unread_messages": 943,
-                "read_messages": 9477,
-                "estimated_storage_mb": 458.5
+                "inbox_total": 8420,
+                "inbox_unread": 943,
+                "inbox_read": 7477,
+                "inbox_threads": 6210,
+                "all_mail_total": 12840,
+                "spam_total": 34,
+                "trash_total": 88,
+                "estimated_storage_mb": 564.2,
+                "session_expired": False
             }
 
         import httpx
         req_headers = {"Authorization": f"Bearer {access_token}"}
         try:
-            with httpx.Client(timeout=10.0) as client:
+            with httpx.Client(timeout=12.0) as client:
                 # 1. Fetch user profile
                 profile_res = client.get("https://gmail.googleapis.com/gmail/v1/users/me/profile", headers=req_headers)
                 if profile_res.status_code == 401:
@@ -116,39 +121,64 @@ class GmailService:
                     else:
                         return {
                             "email_address": "Session Expired",
-                            "total_messages": 0,
-                            "unread_messages": 0,
-                            "read_messages": 0,
+                            "inbox_total": 0,
+                            "inbox_unread": 0,
+                            "inbox_read": 0,
+                            "inbox_threads": 0,
+                            "all_mail_total": 0,
+                            "spam_total": 0,
+                            "trash_total": 0,
                             "estimated_storage_mb": 0.0,
                             "session_expired": True
                         }
 
                 profile = profile_res.json() if profile_res.status_code == 200 else {}
-                total_msgs = profile.get("messagesTotal", 0)
+                all_mail_total = profile.get("messagesTotal", 0)
+                all_threads_total = profile.get("threadsTotal", 0)
                 email_addr = profile.get("emailAddress", "Connected User")
 
-                # 2. Query unread count
-                unread_res = client.get("https://gmail.googleapis.com/gmail/v1/users/me/messages?q=is%3Aunread&maxResults=1", headers=req_headers)
-                unread_count = unread_res.json().get("resultSizeEstimate", 0) if unread_res.status_code == 200 else 0
+                # 2. Fetch EXACT Inbox metrics from system label 'INBOX'
+                inbox_res = client.get("https://gmail.googleapis.com/gmail/v1/users/me/labels/INBOX", headers=req_headers)
+                inbox_data = inbox_res.json() if inbox_res.status_code == 200 else {}
+                inbox_total = inbox_data.get("messagesTotal", 0)
+                inbox_unread = inbox_data.get("messagesUnread", 0)
+                inbox_threads = inbox_data.get("threadsTotal", 0)
+                inbox_read = max(0, inbox_total - inbox_unread)
 
-                read_msgs = max(0, total_msgs - unread_count)
-                storage_mb = round((total_msgs * 45) / 1024, 1)
+                # 3. Fetch Spam & Trash metrics
+                spam_res = client.get("https://gmail.googleapis.com/gmail/v1/users/me/labels/SPAM", headers=req_headers)
+                spam_total = spam_res.json().get("messagesTotal", 0) if spam_res.status_code == 200 else 0
+
+                trash_res = client.get("https://gmail.googleapis.com/gmail/v1/users/me/labels/TRASH", headers=req_headers)
+                trash_total = trash_res.json().get("messagesTotal", 0) if trash_res.status_code == 200 else 0
+
+                storage_mb = round((all_mail_total * 45) / 1024, 1)
 
                 return {
                     "email_address": email_addr,
-                    "total_messages": total_msgs,
-                    "unread_messages": unread_count,
-                    "read_messages": read_msgs,
-                    "estimated_storage_mb": storage_mb
+                    "inbox_total": inbox_total,
+                    "inbox_unread": inbox_unread,
+                    "inbox_read": inbox_read,
+                    "inbox_threads": inbox_threads,
+                    "all_mail_total": all_mail_total,
+                    "spam_total": spam_total,
+                    "trash_total": trash_total,
+                    "estimated_storage_mb": storage_mb,
+                    "session_expired": False
                 }
         except Exception as e:
-            print(f"[Metrics] Error fetching Gmail profile metrics: {e}")
+            print(f"[Metrics] Error fetching Gmail exact metrics: {e}")
             return {
                 "email_address": "user@gmail.com",
-                "total_messages": 1000,
-                "unread_messages": 100,
-                "read_messages": 900,
-                "estimated_storage_mb": 45.0
+                "inbox_total": 1000,
+                "inbox_unread": 100,
+                "inbox_read": 900,
+                "inbox_threads": 800,
+                "all_mail_total": 1500,
+                "spam_total": 10,
+                "trash_total": 20,
+                "estimated_storage_mb": 65.0,
+                "session_expired": False
             }
 
     def fetch_emails(

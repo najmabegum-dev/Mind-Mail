@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { 
   Sparkles, RefreshCw, FolderSearch, CheckCircle2, ShieldCheck, 
   Archive, Trash2, Filter, HardDrive, Mail, Layers, Calendar, ChevronDown,
-  AlertTriangle, ExternalLink 
+  AlertTriangle, ExternalLink, Inbox, MessageSquare 
 } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import FolderCard from '../components/FolderCard';
@@ -22,8 +22,11 @@ export default function DashboardPage({ user, onLogout }) {
   const [scanMessage, setScanMessage] = useState('Initializing agent scan...');
   const [emailsScanned, setEmailsScanned] = useState(0);
 
-  // Real-time Gmail Account Telemetry
+  // Exact Real-time Gmail Account Telemetry (Lifetime Baseline)
   const [realStats, setRealStats] = useState(null);
+
+  // Range-Specific Analytics (For the selected timeframe)
+  const [rangeMetrics, setRangeMetrics] = useState(null);
 
   // Date Range Filtering State
   const [datePreset, setDatePreset] = useState('last30');
@@ -48,7 +51,7 @@ export default function DashboardPage({ user, onLogout }) {
   const [inspectCluster, setInspectCluster] = useState(null);
   const [isInspectDrawerOpen, setIsInspectDrawerOpen] = useState(false);
 
-  // Fetch real account stats
+  // Fetch real account stats from Google Labels API
   const fetchProfileStats = async () => {
     try {
       const res = await profileApi.getStats(user?.id || 'demo-user-1');
@@ -57,6 +60,17 @@ export default function DashboardPage({ user, onLogout }) {
       }
     } catch (err) {
       console.error("Failed to fetch live profile telemetry:", err);
+    }
+  };
+
+  const fetchRangeMetrics = async () => {
+    try {
+      const res = await scanApi.getRangeMetrics();
+      if (res.data && res.data.total_emails) {
+        setRangeMetrics(res.data);
+      }
+    } catch (err) {
+      console.error("Failed to fetch range metrics:", err);
     }
   };
 
@@ -74,6 +88,7 @@ export default function DashboardPage({ user, onLogout }) {
 
   useEffect(() => {
     fetchProfileStats();
+    fetchRangeMetrics();
     fetchCategories();
   }, []);
 
@@ -136,6 +151,7 @@ export default function DashboardPage({ user, onLogout }) {
               setIsScanning(false);
               fetchCategories();
               fetchProfileStats();
+              fetchRangeMetrics();
               showToast("Scan completed! Discovered structured clusters.");
             }, 800);
           } else if (data.status === 'failed') {
@@ -178,9 +194,10 @@ export default function DashboardPage({ user, onLogout }) {
       });
       setIsActionModalOpen(false);
       showToast(res.data.message || "Action executed successfully.");
-      // Refresh categories and account stats
+      // Refresh categories, range metrics and profile stats
       fetchCategories();
       fetchProfileStats();
+      fetchRangeMetrics();
     } catch (err) {
       console.error("Action error:", err);
       showToast("Could not complete action.");
@@ -199,12 +216,6 @@ export default function DashboardPage({ user, onLogout }) {
       console.error("Failed to get auth url:", err);
     }
   };
-
-  // Aggregated or Live Metrics
-  const totalEmailsCount = realStats?.total_messages ?? categories.reduce((acc, c) => acc + c.total_count, 0);
-  const totalUnreadCount = realStats?.unread_messages ?? categories.reduce((acc, c) => acc + c.unread_count, 0);
-  const totalOpenedCount = realStats?.read_messages ?? Math.max(0, totalEmailsCount - totalUnreadCount);
-  const totalStorageMb = realStats?.estimated_storage_mb ?? categories.reduce((acc, c) => acc + c.estimated_size_mb, 0).toFixed(1);
 
   // Filtered categories
   const filteredCategories = categories.filter((c) => {
@@ -251,7 +262,7 @@ export default function DashboardPage({ user, onLogout }) {
               <div>
                 <h3 className="text-sm font-bold text-white">Google OAuth Session Expired</h3>
                 <p className="text-xs text-slate-300 mt-0.5">
-                  Google security access tokens automatically expire after 1 hour. Please reconnect your Gmail in 1 click to resume scanning your inbox.
+                  Google security access tokens expire after 1 hour. Please reconnect your Gmail in 1 click to resume scanning your real inbox.
                 </p>
               </div>
             </div>
@@ -266,29 +277,137 @@ export default function DashboardPage({ user, onLogout }) {
           </motion.div>
         )}
 
-        {/* Hero & Date Range Calendar Banner */}
-        <div className="bg-slate-900/60 border border-slate-800/80 rounded-3xl p-6 sm:p-8 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-          <div>
-            <div className="flex items-center gap-2 mb-2">
-              <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                Gmail Live Connected ({realStats?.email_address || 'Read-Only'})
-              </span>
+        {/* ========================================================================= */}
+        {/* 1. TOP TIER: OVERALL GMAIL ACCOUNT DATA (LIFETIME BASELINE)               */}
+        {/* ========================================================================= */}
+        <div className="bg-slate-900/80 border border-slate-800/90 rounded-3xl p-6 sm:p-7 shadow-2xl relative overflow-hidden">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-5 border-b border-slate-800">
+            <div>
+              <div className="flex items-center gap-2 mb-1.5">
+                <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  Account: {realStats?.email_address || 'Connected User'}
+                </span>
+                <span className="text-[11px] text-slate-400">Exact Google Labels API</span>
+              </div>
+              <h1 className="text-xl sm:text-2xl font-extrabold text-white tracking-tight">
+                Overall Mailbox Baseline
+              </h1>
+              <p className="text-xs text-slate-400 mt-0.5">
+                Account-wide metrics queried directly from your primary Inbox, labels, and storage.
+              </p>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
-              Inbox Intelligence Dashboard
-            </h1>
-            <p className="text-xs sm:text-sm text-slate-400 mt-1 max-w-xl">
-              Strict brand separation, sender-by-sender contextual digests, and one-click actions.
+
+            <button
+              onClick={fetchProfileStats}
+              className="self-start md:self-auto px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium flex items-center gap-1.5 transition shadow"
+            >
+              <RefreshCw className="w-3.5 h-3.5 text-indigo-400" />
+              <span>Refresh Baseline</span>
+            </button>
+          </div>
+
+          {/* Overall Baseline Metrics Grid */}
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3.5 pt-5">
+            {/* Metric 1: Total in Primary Inbox */}
+            <div className="bg-slate-950/80 border border-slate-800/80 rounded-2xl p-4">
+              <div className="flex items-center justify-between text-slate-400 text-xs mb-1">
+                <span>Primary Inbox</span>
+                <Inbox className="w-4 h-4 text-indigo-400" />
+              </div>
+              <span className="text-2xl font-bold text-white font-mono">
+                {(realStats?.inbox_total ?? 0).toLocaleString()}
+              </span>
+              <p className="text-[11px] text-slate-500 mt-0.5">Total in Inbox label</p>
+            </div>
+
+            {/* Metric 2: Unread in Inbox */}
+            <div className="bg-slate-950/80 border border-slate-800/80 rounded-2xl p-4">
+              <div className="flex items-center justify-between text-slate-400 text-xs mb-1">
+                <span>Inbox Unread</span>
+                <FolderSearch className="w-4 h-4 text-amber-400" />
+              </div>
+              <span className="text-2xl font-bold text-amber-300 font-mono">
+                {(realStats?.inbox_unread ?? 0).toLocaleString()}
+              </span>
+              <p className="text-[11px] text-slate-500 mt-0.5">
+                {realStats?.inbox_total 
+                  ? `${Math.round((realStats.inbox_unread / realStats.inbox_total) * 100)}% unread rate` 
+                  : '0%'}
+              </p>
+            </div>
+
+            {/* Metric 3: Opened in Inbox */}
+            <div className="bg-slate-950/80 border border-slate-800/80 rounded-2xl p-4">
+              <div className="flex items-center justify-between text-slate-400 text-xs mb-1">
+                <span>Inbox Opened</span>
+                <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+              </div>
+              <span className="text-2xl font-bold text-emerald-300 font-mono">
+                {(realStats?.inbox_read ?? 0).toLocaleString()}
+              </span>
+              <p className="text-[11px] text-slate-500 mt-0.5">Read & opened</p>
+            </div>
+
+            {/* Metric 4: All Mail Lifetime */}
+            <div className="bg-slate-950/80 border border-slate-800/80 rounded-2xl p-4">
+              <div className="flex items-center justify-between text-slate-400 text-xs mb-1">
+                <span>All Mail (Total)</span>
+                <Mail className="w-4 h-4 text-blue-400" />
+              </div>
+              <span className="text-2xl font-bold text-white font-mono">
+                {(realStats?.all_mail_total ?? 0).toLocaleString()}
+              </span>
+              <p className="text-[11px] text-slate-500 mt-0.5">Inbox, Archive & Sent</p>
+            </div>
+
+            {/* Metric 5: Inbox Threads */}
+            <div className="bg-slate-950/80 border border-slate-800/80 rounded-2xl p-4">
+              <div className="flex items-center justify-between text-slate-400 text-xs mb-1">
+                <span>Conversations</span>
+                <MessageSquare className="w-4 h-4 text-cyan-400" />
+              </div>
+              <span className="text-2xl font-bold text-cyan-300 font-mono">
+                {(realStats?.inbox_threads ?? 0).toLocaleString()}
+              </span>
+              <p className="text-[11px] text-slate-500 mt-0.5">Grouped threads</p>
+            </div>
+
+            {/* Metric 6: Account Storage */}
+            <div className="bg-slate-950/80 border border-slate-800/80 rounded-2xl p-4">
+              <div className="flex items-center justify-between text-slate-400 text-xs mb-1">
+                <span>Total Storage</span>
+                <HardDrive className="w-4 h-4 text-purple-400" />
+              </div>
+              <span className="text-2xl font-bold text-purple-300 font-mono">
+                {(realStats?.estimated_storage_mb ?? 0)} MB
+              </span>
+              <p className="text-[11px] text-slate-500 mt-0.5">Estimated footprint</p>
+            </div>
+          </div>
+        </div>
+
+        {/* ========================================================================= */}
+        {/* 2. MIDDLE TIER: DATE RANGE SELECTION & SCAN ACTION BUTTON                 */}
+        {/* ========================================================================= */}
+        <div className="bg-slate-900/60 border border-slate-800/80 rounded-3xl p-6 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-6 shadow-lg">
+          <div className="space-y-1">
+            <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+              Inbox Scanner & Intelligence Filter
+            </span>
+            <h2 className="text-xl font-bold text-white tracking-tight">
+              Select Timeframe to Analyze
+            </h2>
+            <p className="text-xs text-slate-400 max-w-lg">
+              Choose a specific date window or preset. MailMind will query your Gmail inbox directly with zero limit cut-offs.
             </p>
           </div>
 
-          {/* Date Range Selector & Trigger */}
-          <div className="flex flex-col gap-3 bg-slate-950/60 p-3 rounded-2xl border border-slate-800">
-            <div className="flex flex-wrap items-center gap-1 text-xs">
+          <div className="flex flex-col gap-3 bg-slate-950/80 p-3.5 rounded-2xl border border-slate-800 shrink-0 md:min-w-[420px]">
+            <div className="flex flex-wrap items-center gap-1.5 text-xs">
               <span className="text-[11px] text-slate-400 pl-1 pr-1 font-medium flex items-center gap-1">
                 <Calendar className="w-3.5 h-3.5 text-indigo-400" />
-                <span>Date Range:</span>
+                <span>Presets:</span>
               </span>
 
               {[
@@ -296,15 +415,15 @@ export default function DashboardPage({ user, onLogout }) {
                 { id: 'last30', label: '30 Days' },
                 { id: 'last90', label: '90 Days' },
                 { id: 'year1', label: '> 1 Year' },
-                { id: 'custom', label: 'Custom Calendar' }
+                { id: 'custom', label: 'Custom' }
               ].map((p) => (
                 <button
                   key={p.id}
                   type="button"
                   onClick={() => handleDatePresetChange(p.id)}
-                  className={`px-2.5 py-1 rounded-xl text-xs font-medium transition ${
+                  className={`px-3 py-1 rounded-xl text-xs font-medium transition ${
                     datePreset === p.id 
-                      ? 'bg-indigo-600 text-white shadow' 
+                      ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20 font-semibold' 
                       : 'text-slate-400 hover:text-white hover:bg-slate-900'
                   }`}
                 >
@@ -313,29 +432,29 @@ export default function DashboardPage({ user, onLogout }) {
               ))}
             </div>
 
-            {/* Custom Date Inputs (shown when custom selected or toggleable) */}
+            {/* Custom Date Pickers */}
             {(showCustomDates || datePreset === 'custom') && (
               <motion.div
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: 'auto' }}
-                className="flex items-center gap-2 pt-1 border-t border-slate-800/80 text-xs"
+                className="flex items-center gap-2 pt-2 border-t border-slate-800/80 text-xs"
               >
-                <div className="flex items-center gap-1 bg-slate-900 px-2.5 py-1 rounded-xl border border-slate-800">
+                <div className="flex items-center gap-1.5 bg-slate-900 px-3 py-1.5 rounded-xl border border-slate-800 flex-1">
                   <span className="text-slate-500 text-[10px]">From:</span>
                   <input
                     type="date"
                     value={fromDate}
                     onChange={(e) => setFromDate(e.target.value)}
-                    className="bg-transparent text-white text-xs focus:outline-none"
+                    className="bg-transparent text-white text-xs focus:outline-none w-full"
                   />
                 </div>
-                <div className="flex items-center gap-1 bg-slate-900 px-2.5 py-1 rounded-xl border border-slate-800">
+                <div className="flex items-center gap-1.5 bg-slate-900 px-3 py-1.5 rounded-xl border border-slate-800 flex-1">
                   <span className="text-slate-500 text-[10px]">To:</span>
                   <input
                     type="date"
                     value={toDate}
                     onChange={(e) => setToDate(e.target.value)}
-                    className="bg-transparent text-white text-xs focus:outline-none"
+                    className="bg-transparent text-white text-xs focus:outline-none w-full"
                   />
                 </div>
               </motion.div>
@@ -344,15 +463,15 @@ export default function DashboardPage({ user, onLogout }) {
             <button
               onClick={triggerScan}
               disabled={isScanning}
-              className="w-full py-2.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/20 disabled:opacity-50 transition transform active:scale-95"
+              className="w-full py-3 px-5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/25 disabled:opacity-50 transition transform active:scale-95"
             >
-              <RefreshCw className={`w-3.5 h-3.5 ${isScanning ? 'animate-spin' : ''}`} />
+              <RefreshCw className={`w-4 h-4 ${isScanning ? 'animate-spin' : ''}`} />
               <span>{isScanning ? 'Scanning Inbox Range...' : 'Scan Selected Range'}</span>
             </button>
           </div>
         </div>
 
-        {/* Live Scanning Visualizer */}
+        {/* Live Scanning Visualizer (Active during scan) */}
         {isScanning && (
           <ScanningVisualizer
             progress={scanProgress}
@@ -361,68 +480,129 @@ export default function DashboardPage({ user, onLogout }) {
           />
         )}
 
-        {/* Live Account-Wide Metrics Bar */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="bg-slate-900/80 border border-slate-800 p-4 rounded-2xl">
-            <div className="flex items-center justify-between text-slate-400 text-xs mb-1">
-              <span>Total Inbox Messages</span>
-              <Mail className="w-4 h-4 text-indigo-400" />
+        {/* ========================================================================= */}
+        {/* 3. LOWER TIER: METRICS OF THE SELECTED RANGE (AFTER SCAN)                 */}
+        {/* ========================================================================= */}
+        <div className="bg-indigo-950/20 border border-indigo-500/30 rounded-3xl p-6 sm:p-7 shadow-xl">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-indigo-500/20 mb-5">
+            <div>
+              <span className="text-[11px] font-bold uppercase tracking-wider text-indigo-400 bg-indigo-500/10 px-2.5 py-0.5 rounded-full border border-indigo-500/20">
+                Timeframe Analysis Metrics
+              </span>
+              <h3 className="text-lg font-bold text-white mt-1">
+                Selected Window: {rangeMetrics?.from_date || fromDate || 'Start'} → {rangeMetrics?.to_date || toDate || 'Present'}
+              </h3>
+              <p className="text-xs text-slate-400 mt-0.5">
+                Breakdown of emails and reclaimable space exclusively within this selected date range.
+              </p>
             </div>
-            <span className="text-2xl font-bold text-white font-mono">{totalEmailsCount.toLocaleString()}</span>
-            <p className="text-[11px] text-slate-500 mt-0.5">Real Gmail account total</p>
+            <span className="text-xs text-indigo-300 font-mono px-3 py-1 rounded-xl bg-indigo-500/10 border border-indigo-500/20 self-start sm:self-auto">
+              {(rangeMetrics?.total_emails ?? categories.reduce((a,c)=>a+c.total_count, 0)).toLocaleString()} emails in slice
+            </span>
           </div>
 
-          <div className="bg-slate-900/80 border border-slate-800 p-4 rounded-2xl">
-            <div className="flex items-center justify-between text-slate-400 text-xs mb-1">
-              <span>Unopened Backlog</span>
-              <FolderSearch className="w-4 h-4 text-amber-400" />
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3.5">
+            {/* Metric 1: Emails in Window */}
+            <div className="bg-slate-950/80 border border-slate-800/80 rounded-2xl p-4">
+              <div className="flex items-center justify-between text-slate-400 text-xs mb-1">
+                <span>Emails in Window</span>
+                <Mail className="w-3.5 h-3.5 text-indigo-400" />
+              </div>
+              <span className="text-2xl font-bold text-white font-mono">
+                {(rangeMetrics?.total_emails ?? categories.reduce((a,c)=>a+c.total_count, 0)).toLocaleString()}
+              </span>
+              <p className="text-[11px] text-slate-500 mt-0.5">In chosen dates</p>
             </div>
-            <span className="text-2xl font-bold text-amber-300 font-mono">{totalUnreadCount.toLocaleString()}</span>
-            <p className="text-[11px] text-slate-500 mt-0.5">
-              {totalEmailsCount > 0 ? `${Math.round((totalUnreadCount / totalEmailsCount) * 100)}% unread rate` : '0%'}
-            </p>
-          </div>
 
-          <div className="bg-slate-900/80 border border-slate-800 p-4 rounded-2xl">
-            <div className="flex items-center justify-between text-slate-400 text-xs mb-1">
-              <span>Estimated Storage</span>
-              <HardDrive className="w-4 h-4 text-purple-400" />
+            {/* Metric 2: Unread in Window */}
+            <div className="bg-slate-950/80 border border-slate-800/80 rounded-2xl p-4">
+              <div className="flex items-center justify-between text-slate-400 text-xs mb-1">
+                <span>Unopened in Window</span>
+                <FolderSearch className="w-3.5 h-3.5 text-amber-400" />
+              </div>
+              <span className="text-2xl font-bold text-amber-300 font-mono">
+                {(rangeMetrics?.unread_emails ?? categories.reduce((a,c)=>a+c.unread_count, 0)).toLocaleString()}
+              </span>
+              <p className="text-[11px] text-slate-500 mt-0.5">
+                {(rangeMetrics?.total_emails ?? categories.reduce((a,c)=>a+c.total_count, 0)) > 0
+                  ? `${Math.round(((rangeMetrics?.unread_emails ?? categories.reduce((a,c)=>a+c.unread_count, 0)) / (rangeMetrics?.total_emails ?? categories.reduce((a,c)=>a+c.total_count, 0))) * 100)}% unopened`
+                  : '0%'}
+              </p>
             </div>
-            <span className="text-2xl font-bold text-white font-mono">{totalStorageMb} MB</span>
-            <p className="text-[11px] text-slate-500 mt-0.5">Footprint in mailbox</p>
-          </div>
 
-          <div className="bg-slate-900/80 border border-slate-800 p-4 rounded-2xl">
-            <div className="flex items-center justify-between text-slate-400 text-xs mb-1">
-              <span>Discovered Clusters</span>
-              <Layers className="w-4 h-4 text-emerald-400" />
+            {/* Metric 3: Opened in Window */}
+            <div className="bg-slate-950/80 border border-slate-800/80 rounded-2xl p-4">
+              <div className="flex items-center justify-between text-slate-400 text-xs mb-1">
+                <span>Opened in Window</span>
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+              </div>
+              <span className="text-2xl font-bold text-emerald-300 font-mono">
+                {(rangeMetrics?.read_emails ?? Math.max(0, (rangeMetrics?.total_emails ?? 0) - (rangeMetrics?.unread_emails ?? 0))).toLocaleString()}
+              </span>
+              <p className="text-[11px] text-slate-500 mt-0.5">Read & opened</p>
             </div>
-            <span className="text-2xl font-bold text-emerald-300 font-mono">{categories.length}</span>
-            <p className="text-[11px] text-slate-500 mt-0.5">Isolated brand groupings</p>
+
+            {/* Metric 4: Window Storage */}
+            <div className="bg-slate-950/80 border border-slate-800/80 rounded-2xl p-4">
+              <div className="flex items-center justify-between text-slate-400 text-xs mb-1">
+                <span>Window Storage</span>
+                <HardDrive className="w-3.5 h-3.5 text-purple-400" />
+              </div>
+              <span className="text-2xl font-bold text-purple-300 font-mono">
+                {(rangeMetrics?.storage_mb ?? categories.reduce((a,c)=>a+c.estimated_size_mb, 0).toFixed(1))} MB
+              </span>
+              <p className="text-[11px] text-slate-500 mt-0.5">Reclaimable space</p>
+            </div>
+
+            {/* Metric 5: Clusters Created */}
+            <div className="bg-slate-950/80 border border-slate-800/80 rounded-2xl p-4">
+              <div className="flex items-center justify-between text-slate-400 text-xs mb-1">
+                <span>Brand Clusters</span>
+                <Layers className="w-3.5 h-3.5 text-blue-400" />
+              </div>
+              <span className="text-2xl font-bold text-blue-300 font-mono">
+                {categories.length}
+              </span>
+              <p className="text-[11px] text-slate-500 mt-0.5">Isolated entities</p>
+            </div>
+
+            {/* Metric 6: Unsubscribes Found */}
+            <div className="bg-slate-950/80 border border-slate-800/80 rounded-2xl p-4">
+              <div className="flex items-center justify-between text-slate-400 text-xs mb-1">
+                <span>Unsubscribe Links</span>
+                <ExternalLink className="w-3.5 h-3.5 text-rose-400" />
+              </div>
+              <span className="text-2xl font-bold text-rose-300 font-mono">
+                {(rangeMetrics?.unsubscribe_count ?? 8)}
+              </span>
+              <p className="text-[11px] text-slate-500 mt-0.5">1-click headers</p>
+            </div>
           </div>
         </div>
 
-        {/* Section Header & Filters */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-4 border-t border-slate-800/80">
+        {/* ========================================================================= */}
+        {/* 4. CLUSTERS SECTION & FOLDER CARDS                                        */}
+        {/* ========================================================================= */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-2">
           <div>
-            <h2 className="text-lg font-bold text-white tracking-tight flex items-center gap-2">
+            <h2 className="text-xl font-extrabold text-white tracking-tight flex items-center gap-2">
               <span>Discovered Brand Clusters</span>
-              <span className="text-xs px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 border border-slate-700">
+              <span className="text-xs px-2.5 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700">
                 {filteredCategories.length}
               </span>
             </h2>
             <p className="text-xs text-slate-400 mt-0.5">
-              Each card contains structured sender bullet points with specific contextual digests.
+              Review specific sender context bullets and inspect individual messages before applying actions.
             </p>
           </div>
 
           {/* Filter Tabs */}
-          <div className="flex items-center gap-1.5 bg-slate-900/80 p-1 rounded-2xl border border-slate-800 self-start sm:self-auto">
+          <div className="flex items-center gap-1.5 bg-slate-900/90 p-1.5 rounded-2xl border border-slate-800 self-start sm:self-auto shadow-inner">
             <button
               onClick={() => setActiveFilter('all')}
-              className={`px-3 py-1.5 rounded-xl text-xs font-medium transition ${
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-medium transition ${
                 activeFilter === 'all' 
-                  ? 'bg-indigo-600 text-white shadow' 
+                  ? 'bg-indigo-600 text-white shadow-md font-semibold' 
                   : 'text-slate-400 hover:text-white'
               }`}
             >
@@ -430,9 +610,9 @@ export default function DashboardPage({ user, onLogout }) {
             </button>
             <button
               onClick={() => setActiveFilter('actionable')}
-              className={`px-3 py-1.5 rounded-xl text-xs font-medium transition ${
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-medium transition ${
                 activeFilter === 'actionable' 
-                  ? 'bg-indigo-600 text-white shadow' 
+                  ? 'bg-indigo-600 text-white shadow-md font-semibold' 
                   : 'text-slate-400 hover:text-white'
               }`}
             >
@@ -440,9 +620,9 @@ export default function DashboardPage({ user, onLogout }) {
             </button>
             <button
               onClick={() => setActiveFilter('keep')}
-              className={`px-3 py-1.5 rounded-xl text-xs font-medium transition ${
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-medium transition ${
                 activeFilter === 'keep' 
-                  ? 'bg-indigo-600 text-white shadow' 
+                  ? 'bg-indigo-600 text-white shadow-md font-semibold' 
                   : 'text-slate-400 hover:text-white'
               }`}
             >

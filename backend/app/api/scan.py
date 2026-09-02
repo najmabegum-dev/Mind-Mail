@@ -62,6 +62,23 @@ def execute_scan_task(
         mock_db["last_pipeline_output"] = pipeline_output
         mock_db["last_clustered_emails"] = clustered_emails
 
+        # Compute range-specific metrics
+        unread_in_range = sum(1 for e in raw_emails if not e.get("is_read", False))
+        read_in_range = len(raw_emails) - unread_in_range
+        unsub_in_range = sum(1 for e in raw_emails if e.get("unsubscribe_url"))
+        storage_in_range = round((len(raw_emails) * 45) / 1024, 2)
+
+        mock_db["last_range_metrics"] = {
+            "from_date": from_date or "Earliest",
+            "to_date": to_date or "Present",
+            "total_emails": len(raw_emails),
+            "unread_emails": unread_in_range,
+            "read_emails": read_in_range,
+            "storage_mb": storage_in_range,
+            "clusters_count": len(pipeline_output.get("clusters", {})),
+            "unsubscribe_count": unsub_in_range
+        }
+
         active_scan_state["status"] = "completed"
         active_scan_state["progress_percentage"] = 100
         active_scan_state["categories_discovered"] = len(pipeline_output.get("clusters", {}))
@@ -70,6 +87,11 @@ def execute_scan_task(
     except Exception as e:
         active_scan_state["status"] = "failed"
         active_scan_state["message"] = f"Scanning failed: {str(e)}"
+
+@router.get("/scan/range-metrics")
+async def get_range_metrics():
+    """Returns analytics for the most recently scanned date range."""
+    return mock_db.get("last_range_metrics", {})
 
 @router.get("/profile/stats")
 async def get_profile_telemetry(user_id: str = "demo-user-1", token: str = None):
