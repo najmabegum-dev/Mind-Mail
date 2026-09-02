@@ -33,8 +33,14 @@ async def oauth_callback(code: str = Query(None), state: str = Query(""), error:
     from app.database import mock_db
     tokens = gmail_service.exchange_code_for_tokens(code or "mock_code")
     access_token = tokens.get("access_token")
+    refresh_token = tokens.get("refresh_token")
     if access_token:
         mock_db["latest_gmail_token"] = access_token
+    if refresh_token:
+        mock_db["latest_refresh_token"] = refresh_token
+
     # Redirect user back to frontend dashboard
     redirect_target = f"http://localhost:5173/dashboard?connected=true&token={access_token}"
+    if refresh_token:
+        redirect_target += f"&refresh_token={refresh_token}"
     return RedirectResponse(url=redirect_target)

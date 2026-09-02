@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
   Sparkles, RefreshCw, FolderSearch, CheckCircle2, ShieldCheck, 
-  Archive, Trash2, Filter, HardDrive, Mail, Layers, Calendar, ChevronDown 
+  Archive, Trash2, Filter, HardDrive, Mail, Layers, Calendar, ChevronDown,
+  AlertTriangle, ExternalLink 
 } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import FolderCard from '../components/FolderCard';
@@ -11,7 +12,7 @@ import ActionQueueModal from '../components/ActionQueueModal';
 import FeedbackWidget from '../components/FeedbackWidget';
 import StatsLeaderboard from '../components/StatsLeaderboard';
 import EmailInspectorDrawer from '../components/EmailInspectorDrawer';
-import { scanApi, categoriesApi, actionsApi, profileApi } from '../services/api';
+import { scanApi, categoriesApi, actionsApi, profileApi, gmailApi } from '../services/api';
 
 export default function DashboardPage({ user, onLogout }) {
   const [categories, setCategories] = useState([]);
@@ -188,6 +189,17 @@ export default function DashboardPage({ user, onLogout }) {
     }
   };
 
+  const handleReconnectGmail = async () => {
+    try {
+      const res = await gmailApi.getAuthUrl();
+      if (res.data?.auth_url) {
+        window.location.href = res.data.auth_url;
+      }
+    } catch (err) {
+      console.error("Failed to get auth url:", err);
+    }
+  };
+
   // Aggregated or Live Metrics
   const totalEmailsCount = realStats?.total_messages ?? categories.reduce((acc, c) => acc + c.total_count, 0);
   const totalUnreadCount = realStats?.unread_messages ?? categories.reduce((acc, c) => acc + c.unread_count, 0);
@@ -222,6 +234,35 @@ export default function DashboardPage({ user, onLogout }) {
           >
             <CheckCircle2 className="w-4 h-4" />
             <span>{toastMessage}</span>
+          </motion.div>
+        )}
+
+        {/* Google Session Expired Warning Banner */}
+        {realStats?.session_expired && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-amber-500/10 border border-amber-500/30 rounded-3xl p-5 sm:p-6 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xl"
+          >
+            <div className="flex items-center gap-3.5">
+              <div className="p-3 rounded-2xl bg-amber-500/20 text-amber-400 border border-amber-500/30 shrink-0">
+                <AlertTriangle className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-white">Google OAuth Session Expired</h3>
+                <p className="text-xs text-slate-300 mt-0.5">
+                  Google security access tokens automatically expire after 1 hour. Please reconnect your Gmail in 1 click to resume scanning your inbox.
+                </p>
+              </div>
+            </div>
+
+            <button
+              onClick={handleReconnectGmail}
+              className="px-5 py-2.5 rounded-2xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs flex items-center gap-2 shrink-0 shadow-lg shadow-amber-500/20 transition transform active:scale-95"
+            >
+              <span>Reconnect Gmail</span>
+              <ExternalLink className="w-3.5 h-3.5" />
+            </button>
           </motion.div>
         )}
 

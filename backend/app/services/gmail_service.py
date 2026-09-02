@@ -65,6 +65,30 @@ class GmailService:
         resp.raise_for_status()
         return resp.json()
 
+    def refresh_access_token(self, refresh_token: str) -> Optional[str]:
+        """Use refresh_token to obtain a fresh access_token from Google."""
+        if not refresh_token or settings.DEMO_MODE:
+            return None
+        import httpx
+        try:
+            token_url = "https://oauth2.googleapis.com/token"
+            data = {
+                "client_id": self.client_id,
+                "client_secret": self.client_secret,
+                "refresh_token": refresh_token,
+                "grant_type": "refresh_token",
+            }
+            resp = httpx.post(token_url, data=data, timeout=10.0)
+            if resp.status_code == 200:
+                new_token = resp.json().get("access_token")
+                from app.database import mock_db
+                if new_token:
+                    mock_db["latest_gmail_token"] = new_token
+                return new_token
+        except Exception as e:
+            print(f"[OAuth] Refresh token failed: {e}")
+        return None
+
     def get_inbox_metrics(self, access_token: str) -> Dict[str, Any]:
         """Fetch exact real-time telemetry from Gmail account."""
         if settings.DEMO_MODE or access_token.startswith("mock_"):
@@ -82,6 +106,23 @@ class GmailService:
             with httpx.Client(timeout=10.0) as client:
                 # 1. Fetch user profile
                 profile_res = client.get("https://gmail.googleapis.com/gmail/v1/users/me/profile", headers=req_headers)
+                if profile_res.status_code == 401:
+                    from app.database import mock_db
+                    rf_token = mock_db.get("latest_refresh_token")
+                    new_tok = self.refresh_access_token(rf_token) if rf_token else None
+                    if new_tok:
+                        req_headers["Authorization"] = f"Bearer {new_tok}"
+                        profile_res = client.get("https://gmail.googleapis.com/gmail/v1/users/me/profile", headers=req_headers)
+                    else:
+                        return {
+                            "email_address": "Session Expired",
+                            "total_messages": 0,
+                            "unread_messages": 0,
+                            "read_messages": 0,
+                            "estimated_storage_mb": 0.0,
+                            "session_expired": True
+                        }
+
                 profile = profile_res.json() if profile_res.status_code == 200 else {}
                 total_msgs = profile.get("messagesTotal", 0)
                 email_addr = profile.get("emailAddress", "Connected User")
@@ -188,6 +229,16 @@ class GmailService:
                     list_url += f"&pageToken={next_page_token}"
                 
                 list_resp = client.get(list_url, headers=req_headers)
+                if list_resp.status_code == 401:
+                    from app.database import mock_db
+                    rf_token = mock_db.get("latest_refresh_token")
+                    new_tok = self.refresh_access_token(rf_token) if rf_token else None
+                    if new_tok:
+                        req_headers["Authorization"] = f"Bearer {new_tok}"
+                        list_resp = client.get(list_url, headers=req_headers)
+                    else:
+                        raise Exception("GOOGLE_AUTH_EXPIRED: Your Google OAuth session expired (tokens expire after 1 hour). Please reconnect your Gmail.")
+
                 if list_resp.status_code != 200:
                     break
                 results = list_resp.json()

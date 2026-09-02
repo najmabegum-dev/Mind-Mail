@@ -13,11 +13,15 @@ export default function App() {
     const params = new URLSearchParams(window.location.search);
     const connectedParam = params.get('connected');
     const tokenParam = params.get('token');
+    const refreshTokenParam = params.get('refresh_token');
 
     if (connectedParam === 'true') {
       localStorage.setItem('gmail_connected', 'true');
       if (tokenParam) {
         localStorage.setItem('gmail_token', tokenParam);
+      }
+      if (refreshTokenParam) {
+        localStorage.setItem('gmail_refresh_token', refreshTokenParam);
       }
       setGmailConnected(true);
 
@@ -60,6 +64,8 @@ export default function App() {
     localStorage.removeItem('user');
     localStorage.removeItem('access_token');
     localStorage.removeItem('gmail_connected');
+    localStorage.removeItem('gmail_token');
+    localStorage.removeItem('gmail_refresh_token');
     setUser(null);
     setGmailConnected(false);
   };
