@@ -8,12 +8,24 @@ from app.database import mock_db, db_manager
 from app.services.gmail_service import gmail_service
 
 class IngestionService:
-    def ingest_emails(self, user_id: str, access_token: str, limit: int = 500) -> List[Dict[str, Any]]:
+    def ingest_emails(
+        self, 
+        user_id: str, 
+        access_token: str, 
+        limit: int = 500,
+        from_date: str = None,
+        to_date: str = None
+    ) -> List[Dict[str, Any]]:
         """
         Pulls emails from Gmail API (or mock generator in demo mode)
         and persists them to database.
         """
-        raw_emails = gmail_service.fetch_emails(access_token=access_token, max_results=limit)
+        raw_emails = gmail_service.fetch_emails(
+            access_token=access_token, 
+            from_date=from_date, 
+            to_date=to_date, 
+            max_results=limit
+        )
         
         # Associate user_id
         for email in raw_emails:

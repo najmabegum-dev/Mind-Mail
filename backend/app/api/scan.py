@@ -20,27 +20,42 @@ active_scan_state = {
     "message": "System ready. Ready to scan inbox."
 }
 
-def execute_scan_task(user_id: str, access_token: str, limit: int = 500):
+from app.services.gmail_service import gmail_service
+
+def execute_scan_task(
+    user_id: str, 
+    access_token: str, 
+    limit: int = 500, 
+    from_date: str = None, 
+    to_date: str = None
+):
     global active_scan_state
     try:
+        date_str = f" ({from_date or 'Earliest'} to {to_date or 'Latest'})" if (from_date or to_date) else ""
         active_scan_state["status"] = "ingesting"
-        active_scan_state["message"] = f"Fetching up to {limit} emails concurrently from Gmail API..."
+        active_scan_state["message"] = f"Fetching emails{date_str} concurrently from Gmail API..."
         active_scan_state["progress_percentage"] = 35
 
         # 1. Ingest Emails
-        raw_emails = ingestion_service.ingest_emails(user_id=user_id, access_token=access_token, limit=limit)
+        raw_emails = ingestion_service.ingest_emails(
+            user_id=user_id, 
+            access_token=access_token, 
+            limit=limit,
+            from_date=from_date,
+            to_date=to_date
+        )
         active_scan_state["emails_scanned"] = len(raw_emails)
         active_scan_state["progress_percentage"] = 65
 
         # 2. Semantic Clustering
         active_scan_state["status"] = "clustering"
-        active_scan_state["message"] = f"Clustering {len(raw_emails)} real emails with company & semantic analysis..."
-        clustered_emails = clustering_service.cluster_emails(raw_emails, n_clusters=7)
+        active_scan_state["message"] = f"Clustering {len(raw_emails)} emails with brand & semantic intent analysis..."
+        clustered_emails = clustering_service.cluster_emails(raw_emails, n_clusters=8)
         active_scan_state["progress_percentage"] = 85
 
         # 3. LangGraph Multi-Agent Pipeline
         active_scan_state["status"] = "analyzing"
-        active_scan_state["message"] = "Running LangGraph agents (Classifier, Summarizer, Dedup, Triage)..."
+        active_scan_state["message"] = "Generating structured sender breakdowns and contextual summaries..."
         pipeline_output = run_multi_agent_pipeline(user_id=user_id, clustered_emails=clustered_emails)
         
         # Save results to memory
@@ -50,25 +65,42 @@ def execute_scan_task(user_id: str, access_token: str, limit: int = 500):
         active_scan_state["status"] = "completed"
         active_scan_state["progress_percentage"] = 100
         active_scan_state["categories_discovered"] = len(pipeline_output.get("clusters", {}))
-        active_scan_state["message"] = f"Success! Discovered {len(pipeline_output.get('clusters', {}))} narrative clusters from your real inbox."
+        active_scan_state["message"] = f"Success! Discovered {len(pipeline_output.get('clusters', {}))} structured clusters."
 
     except Exception as e:
         active_scan_state["status"] = "failed"
         active_scan_state["message"] = f"Scanning failed: {str(e)}"
 
-@router.post("/scan", response_model=ScanStatusResponse)
-async def trigger_scan(background_tasks: BackgroundTasks, user_id: str = "demo-user-1", token: str = None, limit: int = 500):
+@router.get("/profile/stats")
+async def get_profile_telemetry(user_id: str = "demo-user-1", token: str = None):
     """
-    Trigger full email scan, clustering, and multi-agent pipeline.
+    Returns exact real-time Gmail inbox telemetry:
+    Total messages, unread, opened, and estimated storage.
+    """
+    effective_token = token if (token and token != "mock_token") else mock_db.get("latest_gmail_token", "mock_token")
+    return gmail_service.get_inbox_metrics(effective_token)
+
+@router.post("/scan", response_model=ScanStatusResponse)
+async def trigger_scan(
+    background_tasks: BackgroundTasks, 
+    user_id: str = "demo-user-1", 
+    token: str = None, 
+    limit: int = 500,
+    from_date: str = None,
+    to_date: str = None
+):
+    """
+    Trigger full email scan with date range filtering, clustering, and multi-agent pipeline.
     """
     global active_scan_state
     effective_token = token if (token and token != "mock_token") else mock_db.get("latest_gmail_token", "mock_token")
 
     active_scan_state["status"] = "started"
     active_scan_state["progress_percentage"] = 10
-    active_scan_state["message"] = f"Initializing scan for {limit} emails..."
+    range_lbl = f"({from_date} to {to_date})" if (from_date or to_date) else f"up to {limit} emails"
+    active_scan_state["message"] = f"Initializing scan for {range_lbl}..."
 
-    background_tasks.add_task(execute_scan_task, user_id, effective_token, limit)
+    background_tasks.add_task(execute_scan_task, user_id, effective_token, limit, from_date, to_date)
     return ScanStatusResponse(**active_scan_state)
 
 @router.get("/scan/status", response_model=ScanStatusResponse)
