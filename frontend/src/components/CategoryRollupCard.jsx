@@ -20,15 +20,15 @@ const CATEGORY_ICONS = {
 };
 
 const CATEGORY_COLORS = {
-  jobs: 'from-blue-600/20 to-indigo-600/10 border-blue-500/30 text-blue-400',
-  banking: 'from-amber-600/20 to-orange-600/10 border-amber-500/30 text-amber-400',
-  devtools: 'from-emerald-600/20 to-teal-600/10 border-emerald-500/30 text-emerald-400',
-  learning: 'from-purple-600/20 to-indigo-600/10 border-purple-500/30 text-purple-400',
-  creative: 'from-pink-600/20 to-rose-600/10 border-pink-500/30 text-pink-400',
-  reading: 'from-cyan-600/20 to-blue-600/10 border-cyan-500/30 text-cyan-400',
-  networking: 'from-violet-600/20 to-purple-600/10 border-violet-500/30 text-violet-400',
-  promotions: 'from-orange-600/20 to-amber-600/10 border-orange-500/30 text-orange-400',
-  general: 'from-slate-700/20 to-slate-800/10 border-slate-700/40 text-slate-400',
+  jobs: 'from-amalfitile/30 to-seabreeze/10 border-amalfitile/40 text-seabreeze',
+  banking: 'from-darkred/30 to-citrus/15 border-darkred/50 text-citrus',
+  devtools: 'from-amalfitile/25 to-teal-900/20 border-seabreeze/30 text-seabreeze',
+  learning: 'from-citrus/25 to-cream/10 border-citrus/40 text-citrus',
+  creative: 'from-darkred/20 to-pink-900/10 border-darkred/30 text-pink-300',
+  reading: 'from-seabreeze/20 to-amalfitile/20 border-seabreeze/30 text-seabreeze',
+  networking: 'from-amalfitile/30 to-indigo-950/20 border-amalfitile/40 text-seabreeze',
+  promotions: 'from-darkred/25 to-citrus/15 border-darkred/40 text-citrus',
+  general: 'from-slate-800/30 to-slate-900/20 border-slate-700/40 text-slate-300',
 };
 
 export default function CategoryRollupCard({ 

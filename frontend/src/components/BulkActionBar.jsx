@@ -22,11 +22,11 @@ export default function BulkActionBar({
       transition={{ type: 'spring', damping: 25, stiffness: 300 }}
       className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-full max-w-3xl px-4"
     >
-      <div className="bg-slate-950/95 border border-indigo-500/40 rounded-3xl p-4 sm:p-5 shadow-2xl backdrop-blur-xl flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div className="bg-slate-950/95 border border-darkred/40 rounded-3xl p-4 sm:p-5 shadow-glow-red backdrop-blur-xl flex flex-col sm:flex-row items-center justify-between gap-4">
         
         {/* Left: Running Total Indicators */}
         <div className="flex items-center gap-3">
-          <div className="p-2.5 rounded-2xl bg-indigo-600/20 border border-indigo-500/30 text-indigo-400">
+          <div className="p-2.5 rounded-2xl bg-darkred/20 border border-darkred/30 text-darkred-300">
             <Mail className="w-5 h-5" />
           </div>
 
@@ -41,14 +41,14 @@ export default function BulkActionBar({
             </div>
 
             <div className="flex items-center gap-2 mt-0.5">
-              <span className="text-xs text-emerald-400 font-semibold flex items-center gap-1">
-                <HardDrive className="w-3.5 h-3.5" />
+              <span className="text-xs text-seabreeze font-semibold flex items-center gap-1">
+                <HardDrive className="w-3.5 h-3.5 text-seabreeze" />
                 <span>{totalSelectedStorageMb.toFixed(1)} MB will be freed</span>
               </span>
 
               {hasSensitiveSelected && (
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 flex items-center gap-1">
-                  <AlertTriangle className="w-3 h-3 text-amber-400" />
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-citrus/20 text-citrus border border-citrus/30 flex items-center gap-1">
+                  <AlertTriangle className="w-3 h-3 text-citrus" />
                   <span>Sensitive items included</span>
                 </span>
               )}
@@ -62,7 +62,7 @@ export default function BulkActionBar({
             type="button"
             disabled={isExecuting}
             onClick={() => onExecuteBulkAction('archive')}
-            className="px-4 py-2.5 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs flex items-center gap-1.5 shadow-lg shadow-blue-600/25 transition transform active:scale-95 disabled:opacity-50"
+            className="px-4 py-2.5 rounded-2xl bg-amalfitile hover:bg-amalfitile-700 text-white font-semibold text-xs flex items-center gap-1.5 shadow-glow-blue transition transform active:scale-95 disabled:opacity-50"
           >
             <Archive className="w-4 h-4" />
             <span>Archive All</span>
@@ -72,7 +72,7 @@ export default function BulkActionBar({
             type="button"
             disabled={isExecuting}
             onClick={() => onExecuteBulkAction('delete')}
-            className="px-4 py-2.5 rounded-2xl bg-rose-600 hover:bg-rose-500 text-white font-semibold text-xs flex items-center gap-1.5 shadow-lg shadow-rose-600/25 transition transform active:scale-95 disabled:opacity-50"
+            className="px-4 py-2.5 rounded-2xl bg-darkred hover:bg-darkred-700 text-white font-semibold text-xs flex items-center gap-1.5 shadow-glow-red transition transform active:scale-95 disabled:opacity-50"
           >
             <Trash2 className="w-4 h-4" />
             <span>Trash All</span>

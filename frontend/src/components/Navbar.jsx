@@ -8,13 +8,13 @@ export default function Navbar({ user, onOpenStats, onOpenFeedback, onLogout }) 
         
         {/* Brand */}
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-purple-500 flex items-center justify-center shadow-lg shadow-indigo-500/20">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-darkred via-darkred-700 to-amalfitile flex items-center justify-center shadow-glow-red">
             <Mail className="w-5 h-5 text-white" />
           </div>
           <div>
             <div className="flex items-center gap-2">
               <span className="font-bold text-lg text-white tracking-tight">MailMind</span>
-              <span className="text-[10px] uppercase font-semibold px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+              <span className="text-[10px] uppercase font-semibold px-2 py-0.5 rounded-full bg-darkred/15 text-darkred-300 border border-darkred/30">
                 Agentic v0.1
               </span>
             </div>

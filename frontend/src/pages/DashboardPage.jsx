@@ -491,7 +491,7 @@ export default function DashboardPage({ user, onLogout }) {
                   onClick={() => handleDatePresetChange(p.id)}
                   className={`px-3 py-1 rounded-xl text-xs font-medium transition ${
                     datePreset === p.id 
-                      ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20 font-semibold' 
+                      ? 'bg-amalfitile text-white shadow-glow-blue font-semibold' 
                       : 'text-slate-400 hover:text-white hover:bg-slate-900'
                   }`}
                 >
@@ -531,7 +531,7 @@ export default function DashboardPage({ user, onLogout }) {
             {/* Scan Depth Selector */}
             <div className="flex flex-wrap items-center gap-1.5 pt-1 text-xs border-t border-slate-800/80">
               <span className="text-[11px] text-slate-400 pl-1 pr-1 font-medium flex items-center gap-1">
-                <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
+                <Sparkles className="w-3.5 h-3.5 text-citrus" />
                 <span>Scan Depth:</span>
               </span>
               {[
@@ -546,7 +546,7 @@ export default function DashboardPage({ user, onLogout }) {
                   onClick={() => setScanLimit(d.id)}
                   className={`px-2.5 py-1 rounded-xl text-[11px] font-medium transition ${
                     scanLimit === d.id
-                      ? 'bg-indigo-600/40 text-indigo-200 border border-indigo-500/50 font-semibold shadow'
+                      ? 'bg-amalfitile/40 text-seabreeze border border-amalfitile font-semibold shadow'
                       : 'text-slate-400 hover:text-white bg-slate-900 border border-slate-800'
                   }`}
                 >
@@ -558,7 +558,7 @@ export default function DashboardPage({ user, onLogout }) {
             <button
               onClick={triggerScan}
               disabled={isScanning}
-              className="w-full py-3 px-5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/25 disabled:opacity-50 transition transform active:scale-95"
+              className="w-full py-3.5 px-5 rounded-xl bg-darkred hover:bg-darkred-700 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-glow-red border border-darkred-500/40 disabled:opacity-50 transition transform active:scale-95"
             >
               <RefreshCw className={`w-4 h-4 ${isScanning ? 'animate-spin' : ''}`} />
               <span>{isScanning ? 'Scanning Inbox Range...' : `Scan Selected Range (up to ${scanLimit.toLocaleString()} emails)`}</span>
@@ -578,10 +578,10 @@ export default function DashboardPage({ user, onLogout }) {
         {/* ========================================================================= */}
         {/* 3. LOWER TIER: METRICS OF THE SELECTED RANGE (AFTER SCAN)                 */}
         {/* ========================================================================= */}
-        <div className="bg-indigo-950/20 border border-indigo-500/30 rounded-3xl p-6 sm:p-7 shadow-xl">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-indigo-500/20 mb-5">
+        <div className="bg-slate-900/80 border border-amalfitile/40 rounded-3xl p-6 sm:p-7 shadow-glow-blue">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-amalfitile/20 mb-5">
             <div>
-              <span className="text-[11px] font-bold uppercase tracking-wider text-indigo-400 bg-indigo-500/10 px-2.5 py-0.5 rounded-full border border-indigo-500/20">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-seabreeze bg-amalfitile/20 px-2.5 py-0.5 rounded-full border border-amalfitile/30">
                 Timeframe Analysis Metrics
               </span>
               <h3 className="text-lg font-bold text-white mt-1">
@@ -591,7 +591,7 @@ export default function DashboardPage({ user, onLogout }) {
                 Breakdown of emails and reclaimable space exclusively within this selected date range.
               </p>
             </div>
-            <span className="text-xs text-indigo-300 font-mono px-3 py-1 rounded-xl bg-indigo-500/10 border border-indigo-500/20 self-start sm:self-auto">
+            <span className="text-xs text-seabreeze font-mono px-3 py-1 rounded-xl bg-amalfitile/20 border border-amalfitile/30 self-start sm:self-auto">
               {(rangeMetrics?.total_emails ?? categories.reduce((a,c)=>a+c.total_count, 0)).toLocaleString()} emails in slice
             </span>
           </div>
@@ -600,7 +600,7 @@ export default function DashboardPage({ user, onLogout }) {
             <div className="bg-slate-950/80 border border-slate-800/80 rounded-2xl p-4">
               <div className="flex items-center justify-between text-slate-400 text-xs mb-1">
                 <span>Emails in Window</span>
-                <Mail className="w-3.5 h-3.5 text-indigo-400" />
+                <Mail className="w-3.5 h-3.5 text-seabreeze" />
               </div>
               <span className="text-2xl font-bold text-white font-mono">
                 {(rangeMetrics?.total_emails ?? categories.reduce((a,c)=>a+c.total_count, 0)).toLocaleString()}
@@ -611,9 +611,9 @@ export default function DashboardPage({ user, onLogout }) {
             <div className="bg-slate-950/80 border border-slate-800/80 rounded-2xl p-4">
               <div className="flex items-center justify-between text-slate-400 text-xs mb-1">
                 <span>Unopened in Window</span>
-                <FolderSearch className="w-3.5 h-3.5 text-amber-400" />
+                <FolderSearch className="w-3.5 h-3.5 text-citrus" />
               </div>
-              <span className="text-2xl font-bold text-amber-300 font-mono">
+              <span className="text-2xl font-bold text-citrus font-mono">
                 {(rangeMetrics?.unread_emails ?? categories.reduce((a,c)=>a+c.unread_count, 0)).toLocaleString()}
               </span>
               <p className="text-[11px] text-slate-500 mt-0.5">
@@ -637,9 +637,9 @@ export default function DashboardPage({ user, onLogout }) {
             <div className="bg-slate-950/80 border border-slate-800/80 rounded-2xl p-4">
               <div className="flex items-center justify-between text-slate-400 text-xs mb-1">
                 <span>Window Storage</span>
-                <HardDrive className="w-3.5 h-3.5 text-purple-400" />
+                <HardDrive className="w-3.5 h-3.5 text-darkred-400" />
               </div>
-              <span className="text-2xl font-bold text-purple-300 font-mono">
+              <span className="text-2xl font-bold text-darkred-300 font-mono">
                 {(rangeMetrics?.storage_mb ?? categories.reduce((a,c)=>a+c.estimated_size_mb, 0).toFixed(1))} MB
               </span>
               <p className="text-[11px] text-slate-500 mt-0.5">Reclaimable space</p>
@@ -648,9 +648,9 @@ export default function DashboardPage({ user, onLogout }) {
             <div className="bg-slate-950/80 border border-slate-800/80 rounded-2xl p-4">
               <div className="flex items-center justify-between text-slate-400 text-xs mb-1">
                 <span>Brand Clusters</span>
-                <Layers className="w-3.5 h-3.5 text-blue-400" />
+                <Layers className="w-3.5 h-3.5 text-amalfitile" />
               </div>
-              <span className="text-2xl font-bold text-blue-300 font-mono">
+              <span className="text-2xl font-bold text-seabreeze font-mono">
                 {categories.length}
               </span>
               <p className="text-[11px] text-slate-500 mt-0.5">Isolated entities</p>
@@ -659,9 +659,9 @@ export default function DashboardPage({ user, onLogout }) {
             <div className="bg-slate-950/80 border border-slate-800/80 rounded-2xl p-4">
               <div className="flex items-center justify-between text-slate-400 text-xs mb-1">
                 <span>Unsubscribe Links</span>
-                <ExternalLink className="w-3.5 h-3.5 text-rose-400" />
+                <ExternalLink className="w-3.5 h-3.5 text-citrus" />
               </div>
-              <span className="text-2xl font-bold text-rose-300 font-mono">
+              <span className="text-2xl font-bold text-citrus font-mono">
                 {(rangeMetrics?.unsubscribe_count ?? 8)}
               </span>
               <p className="text-[11px] text-slate-500 mt-0.5">1-click headers</p>
@@ -695,10 +695,10 @@ export default function DashboardPage({ user, onLogout }) {
             <button
               type="button"
               onClick={handleSelectAllActionable}
-              className="px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-800 text-xs font-semibold flex items-center gap-1.5 transition"
+              className="px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-800 hover:border-darkred/40 text-xs font-semibold flex items-center gap-1.5 transition"
               title="Select all promotional & newsletter clutter (sensitive banking/HR clusters strictly excluded)"
             >
-              <CheckSquare className="w-3.5 h-3.5 text-indigo-400" />
+              <CheckSquare className="w-3.5 h-3.5 text-citrus" />
               <span>Select Routine Clutter</span>
             </button>
 
@@ -709,7 +709,7 @@ export default function DashboardPage({ user, onLogout }) {
                 onClick={() => setViewMode('rollup')}
                 className={`px-3 py-1 rounded-xl text-xs font-medium transition flex items-center gap-1.5 ${
                   viewMode === 'rollup' 
-                    ? 'bg-indigo-600 text-white shadow-md font-semibold' 
+                    ? 'bg-darkred text-white shadow-glow-red font-semibold' 
                     : 'text-slate-400 hover:text-white'
                 }`}
               >
@@ -722,7 +722,7 @@ export default function DashboardPage({ user, onLogout }) {
                 onClick={() => setViewMode('flat')}
                 className={`px-3 py-1 rounded-xl text-xs font-medium transition flex items-center gap-1.5 ${
                   viewMode === 'flat' 
-                    ? 'bg-indigo-600 text-white shadow-md font-semibold' 
+                    ? 'bg-darkred text-white shadow-glow-red font-semibold' 
                     : 'text-slate-400 hover:text-white'
                 }`}
               >
