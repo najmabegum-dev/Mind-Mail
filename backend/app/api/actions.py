@@ -3,7 +3,7 @@ Approval Queue & Action Execution Router
 Executes user-approved archive or delete calls against the Gmail API and records audit logs.
 """
 from fastapi import APIRouter, HTTPException
-from typing import Dict, Any
+from typing import Dict, Any, List, Optional
 from app.models.schemas import ActionApprovalRequest, ActionApprovalResponse
 from app.services.gmail_service import gmail_service
 from app.database import mock_db, db_manager
