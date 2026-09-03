@@ -44,6 +44,8 @@ class EmailItem(BaseModel):
 class CategorySummary(BaseModel):
     cluster_id: str
     category_name: str
+    parent_id: str = "general"
+    parent_category: str = "General & Miscellaneous"
     total_count: int
     unread_count: int
     narrative_summary: str
@@ -53,6 +55,24 @@ class CategorySummary(BaseModel):
     estimated_size_mb: float
     sender_breakdown: List[Dict[str, Any]] = []
     primary_intent: str = "general"
+    is_sensitive: bool = False
+    needs_review: bool = False
+    sensitivity_reason: Optional[str] = None
+
+class ParentCategoryRollup(BaseModel):
+    parent_id: str
+    parent_name: str
+    total_emails: int
+    unread_emails: int
+    storage_mb: float
+    clusters_count: int
+    clusters: List[CategorySummary] = []
+    is_sensitive: bool = False
+    needs_review: bool = False
+
+class BulkActionApprovalRequest(BaseModel):
+    cluster_ids: List[str]
+    action: str # "archive", "delete", "keep"
 
 class ScanStatusResponse(BaseModel):
     status: str # "idle", "ingesting", "clustering", "analyzing", "completed", "failed"

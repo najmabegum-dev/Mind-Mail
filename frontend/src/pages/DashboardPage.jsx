@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Sparkles, RefreshCw, FolderSearch, CheckCircle2, ShieldCheck, 
   Archive, Trash2, Filter, HardDrive, Mail, Layers, Calendar, ChevronDown,
-  AlertTriangle, ExternalLink, Inbox, MessageSquare 
+  AlertTriangle, ExternalLink, Inbox, MessageSquare, LayoutGrid, ListFilter,
+  CheckSquare, Square, ShieldAlert
 } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import FolderCard from '../components/FolderCard';
+import CategoryRollupCard from '../components/CategoryRollupCard';
+import BulkActionBar from '../components/BulkActionBar';
 import ScanningVisualizer from '../components/ScanningVisualizer';
 import ActionQueueModal from '../components/ActionQueueModal';
 import FeedbackWidget from '../components/FeedbackWidget';
@@ -16,6 +19,7 @@ import { scanApi, categoriesApi, actionsApi, profileApi, gmailApi } from '../ser
 
 export default function DashboardPage({ user, onLogout }) {
   const [categories, setCategories] = useState([]);
+  const [rollups, setRollups] = useState([]);
   const [loadingCategories, setLoadingCategories] = useState(true);
   const [isScanning, setIsScanning] = useState(false);
   const [scanProgress, setScanProgress] = useState(0);
@@ -27,6 +31,12 @@ export default function DashboardPage({ user, onLogout }) {
 
   // Range-Specific Analytics (For the selected timeframe)
   const [rangeMetrics, setRangeMetrics] = useState(null);
+
+  // View Mode: 'rollup' (hierarchical 6-10 categories) vs 'flat' (all clusters)
+  const [viewMode, setViewMode] = useState('rollup');
+
+  // Multi-select Checkbox State for Bulk Actions
+  const [selectedClusterIds, setSelectedClusterIds] = useState([]);
 
   // Date Range Filtering State
   const [datePreset, setDatePreset] = useState('last30');
@@ -77,8 +87,12 @@ export default function DashboardPage({ user, onLogout }) {
   const fetchCategories = async () => {
     try {
       setLoadingCategories(true);
-      const res = await categoriesApi.getCategories(user?.id || 'demo-user-1');
-      setCategories(res.data || []);
+      const [catRes, rollRes] = await Promise.all([
+        categoriesApi.getCategories(user?.id || 'demo-user-1'),
+        categoriesApi.getCategoriesRollup(user?.id || 'demo-user-1')
+      ]);
+      setCategories(catRes.data || []);
+      setRollups(rollRes.data || []);
     } catch (err) {
       console.error("Failed to load categories:", err);
     } finally {
@@ -136,7 +150,6 @@ export default function DashboardPage({ user, onLogout }) {
     try {
       await scanApi.triggerScan(user?.id || 'demo-user-1', 1000, fromDate || null, toDate || null);
 
-      // Poll scan status until completion
       const interval = setInterval(async () => {
         try {
           const res = await scanApi.getScanStatus();
@@ -194,13 +207,60 @@ export default function DashboardPage({ user, onLogout }) {
       });
       setIsActionModalOpen(false);
       showToast(res.data.message || "Action executed successfully.");
-      // Refresh categories, range metrics and profile stats
       fetchCategories();
       fetchProfileStats();
       fetchRangeMetrics();
     } catch (err) {
       console.error("Action error:", err);
       showToast("Could not complete action.");
+    } finally {
+      setIsExecutingAction(false);
+    }
+  };
+
+  // Multi-select Bulk Action Handlers (Fix #3 & #4)
+  const handleToggleClusterSelect = (clusterId) => {
+    setSelectedClusterIds(prev => 
+      prev.includes(clusterId) ? prev.filter(id => id !== clusterId) : [...prev, clusterId]
+    );
+  };
+
+  const handleToggleParentSelect = (childClusterIds, shouldSelect) => {
+    setSelectedClusterIds(prev => {
+      if (shouldSelect) {
+        return Array.from(new Set([...prev, ...childClusterIds]));
+      } else {
+        return prev.filter(id => !childClusterIds.includes(id));
+      }
+    });
+  };
+
+  const handleSelectAllActionable = () => {
+    // Strictly exclude sensitive / needs_review clusters from bulk select!
+    const actionableSafe = categories
+      .filter(c => (c.suggested_action === 'delete' || c.suggested_action === 'archive') && !c.needs_review)
+      .map(c => c.cluster_id);
+    
+    setSelectedClusterIds(actionableSafe);
+    showToast(`Selected ${actionableSafe.length} routine clutter clusters (sensitive banking/HR clusters strictly excluded).`);
+  };
+
+  const handleExecuteBulkAction = async (action) => {
+    if (selectedClusterIds.length === 0) return;
+    setIsExecutingAction(true);
+    try {
+      const res = await actionsApi.bulkApproveAction({
+        cluster_ids: selectedClusterIds,
+        action: action
+      });
+      showToast(res.data?.message || `Bulk ${action} executed successfully!`);
+      setSelectedClusterIds([]);
+      fetchCategories();
+      fetchProfileStats();
+      fetchRangeMetrics();
+    } catch (err) {
+      console.error("Bulk action failed:", err);
+      showToast("Could not complete bulk action.");
     } finally {
       setIsExecutingAction(false);
     }
@@ -222,8 +282,15 @@ export default function DashboardPage({ user, onLogout }) {
     if (activeFilter === 'all') return true;
     if (activeFilter === 'actionable') return c.suggested_action === 'delete' || c.suggested_action === 'archive';
     if (activeFilter === 'keep') return c.suggested_action === 'keep';
+    if (activeFilter === 'review') return c.needs_review;
     return true;
   });
+
+  // Calculate Running Total for Selected Clusters
+  const selectedClustersList = categories.filter(c => selectedClusterIds.includes(c.cluster_id));
+  const totalSelectedEmails = selectedClustersList.reduce((acc, c) => acc + c.total_count, 0);
+  const totalSelectedStorageMb = selectedClustersList.reduce((acc, c) => acc + c.estimated_size_mb, 0);
+  const hasSensitiveSelected = selectedClustersList.some(c => c.needs_review);
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col selection:bg-indigo-500 selection:text-white">
@@ -234,7 +301,7 @@ export default function DashboardPage({ user, onLogout }) {
         onLogout={onLogout}
       />
 
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 pb-28">
         
         {/* Toast Notification */}
         {toastMessage && (
@@ -309,7 +376,6 @@ export default function DashboardPage({ user, onLogout }) {
 
           {/* Overall Baseline Metrics Grid */}
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3.5 pt-5">
-            {/* Metric 1: Total in Primary Inbox */}
             <div className="bg-slate-950/80 border border-slate-800/80 rounded-2xl p-4">
               <div className="flex items-center justify-between text-slate-400 text-xs mb-1">
                 <span>Primary Inbox</span>
@@ -321,7 +387,6 @@ export default function DashboardPage({ user, onLogout }) {
               <p className="text-[11px] text-slate-500 mt-0.5">Total in Inbox label</p>
             </div>
 
-            {/* Metric 2: Unread in Inbox */}
             <div className="bg-slate-950/80 border border-slate-800/80 rounded-2xl p-4">
               <div className="flex items-center justify-between text-slate-400 text-xs mb-1">
                 <span>Inbox Unread</span>
@@ -337,7 +402,6 @@ export default function DashboardPage({ user, onLogout }) {
               </p>
             </div>
 
-            {/* Metric 3: Opened in Inbox */}
             <div className="bg-slate-950/80 border border-slate-800/80 rounded-2xl p-4">
               <div className="flex items-center justify-between text-slate-400 text-xs mb-1">
                 <span>Inbox Opened</span>
@@ -349,7 +413,6 @@ export default function DashboardPage({ user, onLogout }) {
               <p className="text-[11px] text-slate-500 mt-0.5">Read & opened</p>
             </div>
 
-            {/* Metric 4: All Mail Lifetime */}
             <div className="bg-slate-950/80 border border-slate-800/80 rounded-2xl p-4">
               <div className="flex items-center justify-between text-slate-400 text-xs mb-1">
                 <span>All Mail (Total)</span>
@@ -361,7 +424,6 @@ export default function DashboardPage({ user, onLogout }) {
               <p className="text-[11px] text-slate-500 mt-0.5">Inbox, Archive & Sent</p>
             </div>
 
-            {/* Metric 5: Inbox Threads */}
             <div className="bg-slate-950/80 border border-slate-800/80 rounded-2xl p-4">
               <div className="flex items-center justify-between text-slate-400 text-xs mb-1">
                 <span>Conversations</span>
@@ -373,7 +435,6 @@ export default function DashboardPage({ user, onLogout }) {
               <p className="text-[11px] text-slate-500 mt-0.5">Grouped threads</p>
             </div>
 
-            {/* Metric 6: Account Storage */}
             <div className="bg-slate-950/80 border border-slate-800/80 rounded-2xl p-4">
               <div className="flex items-center justify-between text-slate-400 text-xs mb-1">
                 <span>Total Storage</span>
@@ -502,7 +563,6 @@ export default function DashboardPage({ user, onLogout }) {
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3.5">
-            {/* Metric 1: Emails in Window */}
             <div className="bg-slate-950/80 border border-slate-800/80 rounded-2xl p-4">
               <div className="flex items-center justify-between text-slate-400 text-xs mb-1">
                 <span>Emails in Window</span>
@@ -514,7 +574,6 @@ export default function DashboardPage({ user, onLogout }) {
               <p className="text-[11px] text-slate-500 mt-0.5">In chosen dates</p>
             </div>
 
-            {/* Metric 2: Unread in Window */}
             <div className="bg-slate-950/80 border border-slate-800/80 rounded-2xl p-4">
               <div className="flex items-center justify-between text-slate-400 text-xs mb-1">
                 <span>Unopened in Window</span>
@@ -530,7 +589,6 @@ export default function DashboardPage({ user, onLogout }) {
               </p>
             </div>
 
-            {/* Metric 3: Opened in Window */}
             <div className="bg-slate-950/80 border border-slate-800/80 rounded-2xl p-4">
               <div className="flex items-center justify-between text-slate-400 text-xs mb-1">
                 <span>Opened in Window</span>
@@ -542,7 +600,6 @@ export default function DashboardPage({ user, onLogout }) {
               <p className="text-[11px] text-slate-500 mt-0.5">Read & opened</p>
             </div>
 
-            {/* Metric 4: Window Storage */}
             <div className="bg-slate-950/80 border border-slate-800/80 rounded-2xl p-4">
               <div className="flex items-center justify-between text-slate-400 text-xs mb-1">
                 <span>Window Storage</span>
@@ -554,7 +611,6 @@ export default function DashboardPage({ user, onLogout }) {
               <p className="text-[11px] text-slate-500 mt-0.5">Reclaimable space</p>
             </div>
 
-            {/* Metric 5: Clusters Created */}
             <div className="bg-slate-950/80 border border-slate-800/80 rounded-2xl p-4">
               <div className="flex items-center justify-between text-slate-400 text-xs mb-1">
                 <span>Brand Clusters</span>
@@ -566,7 +622,6 @@ export default function DashboardPage({ user, onLogout }) {
               <p className="text-[11px] text-slate-500 mt-0.5">Isolated entities</p>
             </div>
 
-            {/* Metric 6: Unsubscribes Found */}
             <div className="bg-slate-950/80 border border-slate-800/80 rounded-2xl p-4">
               <div className="flex items-center justify-between text-slate-400 text-xs mb-1">
                 <span>Unsubscribe Links</span>
@@ -581,84 +636,167 @@ export default function DashboardPage({ user, onLogout }) {
         </div>
 
         {/* ========================================================================= */}
-        {/* 4. CLUSTERS SECTION & FOLDER CARDS                                        */}
+        {/* 4. CLUSTERS SECTION: HIERARCHICAL ROLLUP & BULK CONTROLS                  */}
         {/* ========================================================================= */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-2">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pt-2">
           <div>
-            <h2 className="text-xl font-extrabold text-white tracking-tight flex items-center gap-2">
-              <span>Discovered Brand Clusters</span>
+            <div className="flex items-center gap-2 mb-1">
+              <h2 className="text-xl font-extrabold text-white tracking-tight">
+                {viewMode === 'rollup' ? 'Hierarchical Category Rollup' : 'Itemized Brand Clusters'}
+              </h2>
               <span className="text-xs px-2.5 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700">
-                {filteredCategories.length}
+                {viewMode === 'rollup' ? `${rollups.length} parent categories` : `${filteredCategories.length} clusters`}
               </span>
-            </h2>
-            <p className="text-xs text-slate-400 mt-0.5">
-              Review specific sender context bullets and inspect individual messages before applying actions.
+            </div>
+            <p className="text-xs text-slate-400">
+              {viewMode === 'rollup' 
+                ? 'Parent-level grouping organizing senders into clean categories. Expand any category to see specific brand cards.' 
+                : 'Flat view of all isolated brand clusters with per-sender summaries.'}
             </p>
           </div>
 
-          {/* Filter Tabs */}
-          <div className="flex items-center gap-1.5 bg-slate-900/90 p-1.5 rounded-2xl border border-slate-800 self-start sm:self-auto shadow-inner">
+          {/* Navigation Controls: View Mode & Multi-Select Helper */}
+          <div className="flex flex-wrap items-center gap-2.5">
+            {/* Quick Bulk Select Button (Fix #4: Strictly excludes banking/HR) */}
             <button
-              onClick={() => setActiveFilter('all')}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-medium transition ${
-                activeFilter === 'all' 
-                  ? 'bg-indigo-600 text-white shadow-md font-semibold' 
-                  : 'text-slate-400 hover:text-white'
-              }`}
+              type="button"
+              onClick={handleSelectAllActionable}
+              className="px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-800 text-xs font-semibold flex items-center gap-1.5 transition"
+              title="Select all promotional & newsletter clutter (sensitive banking/HR clusters strictly excluded)"
             >
-              All Clusters
+              <CheckSquare className="w-3.5 h-3.5 text-indigo-400" />
+              <span>Select Routine Clutter</span>
             </button>
-            <button
-              onClick={() => setActiveFilter('actionable')}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-medium transition ${
-                activeFilter === 'actionable' 
-                  ? 'bg-indigo-600 text-white shadow-md font-semibold' 
-                  : 'text-slate-400 hover:text-white'
-              }`}
-            >
-              Actionable (Archive/Trash)
-            </button>
-            <button
-              onClick={() => setActiveFilter('keep')}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-medium transition ${
-                activeFilter === 'keep' 
-                  ? 'bg-indigo-600 text-white shadow-md font-semibold' 
-                  : 'text-slate-400 hover:text-white'
-              }`}
-            >
-              Keep in Inbox
-            </button>
+
+            {/* View Mode Toggle (Rollup vs Flat Grid) */}
+            <div className="flex items-center bg-slate-900/90 p-1 rounded-2xl border border-slate-800">
+              <button
+                type="button"
+                onClick={() => setViewMode('rollup')}
+                className={`px-3 py-1 rounded-xl text-xs font-medium transition flex items-center gap-1.5 ${
+                  viewMode === 'rollup' 
+                    ? 'bg-indigo-600 text-white shadow-md font-semibold' 
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                <Layers className="w-3.5 h-3.5" />
+                <span>Rollup ({rollups.length})</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setViewMode('flat')}
+                className={`px-3 py-1 rounded-xl text-xs font-medium transition flex items-center gap-1.5 ${
+                  viewMode === 'flat' 
+                    ? 'bg-indigo-600 text-white shadow-md font-semibold' 
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                <LayoutGrid className="w-3.5 h-3.5" />
+                <span>Flat Grid ({categories.length})</span>
+              </button>
+            </div>
+
+            {/* Filter Tabs */}
+            <div className="flex items-center gap-1 bg-slate-900/90 p-1 rounded-2xl border border-slate-800">
+              <button
+                onClick={() => setActiveFilter('all')}
+                className={`px-2.5 py-1 rounded-xl text-xs font-medium transition ${
+                  activeFilter === 'all' ? 'bg-slate-800 text-white font-semibold' : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                All
+              </button>
+              <button
+                onClick={() => setActiveFilter('actionable')}
+                className={`px-2.5 py-1 rounded-xl text-xs font-medium transition ${
+                  activeFilter === 'actionable' ? 'bg-slate-800 text-white font-semibold' : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                Actionable
+              </button>
+              <button
+                onClick={() => setActiveFilter('review')}
+                className={`px-2.5 py-1 rounded-xl text-xs font-medium transition ${
+                  activeFilter === 'review' ? 'bg-amber-600/30 text-amber-300 font-semibold' : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                Needs Review
+              </button>
+            </div>
           </div>
         </div>
 
-        {/* Categories Grid */}
+        {/* Content View: Hierarchical Category Rollup vs Flat Grid */}
         {loadingCategories ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[1, 2, 3, 4, 5, 6].map((n) => (
-              <div key={n} className="h-64 rounded-2xl bg-slate-900/40 border border-slate-800 animate-pulse" />
+              <div key={n} className="h-44 rounded-3xl bg-slate-900/40 border border-slate-800 animate-pulse" />
             ))}
           </div>
-        ) : filteredCategories.length === 0 ? (
-          <div className="text-center py-20 bg-slate-900/30 rounded-3xl border border-slate-800/80">
-            <FolderSearch className="w-12 h-12 text-slate-600 mx-auto mb-3" />
-            <h3 className="text-base font-semibold text-slate-300">No clusters found in this filter</h3>
-            <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
-              Run a scan or switch filters to view your structured email clusters.
-            </p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredCategories.map((category) => (
-              <FolderCard
-                key={category.cluster_id}
-                category={category}
+        ) : viewMode === 'rollup' ? (
+          // =========================================================================
+          // HIERARCHICAL ROLLUP VIEW (~6 to 10 Parent Category Cards)
+          // =========================================================================
+          <div className="space-y-5">
+            {rollups.map((rollupItem) => (
+              <CategoryRollupCard
+                key={rollupItem.parent_id}
+                rollup={rollupItem}
                 onSelectAction={handleOpenActionModal}
                 onInspect={handleInspectCluster}
+                selectedClusterIds={selectedClusterIds}
+                onToggleClusterSelect={handleToggleClusterSelect}
+                onToggleParentSelect={handleToggleParentSelect}
               />
             ))}
           </div>
+        ) : (
+          // =========================================================================
+          // FLAT GRID VIEW (Standardized Card Heights, No Gaps)
+          // =========================================================================
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-start">
+            {filteredCategories.map((category) => {
+              const isSelected = selectedClusterIds.includes(category.cluster_id);
+              return (
+                <div key={category.cluster_id} className="relative">
+                  <div className="absolute top-4 left-4 z-10">
+                    <button
+                      type="button"
+                      onClick={() => handleToggleClusterSelect(category.cluster_id)}
+                      className="p-1 rounded bg-slate-950/80 border border-slate-700 text-slate-300 hover:text-white transition"
+                    >
+                      {isSelected ? (
+                        <CheckSquare className="w-4 h-4 text-indigo-400" />
+                      ) : (
+                        <Square className="w-4 h-4" />
+                      )}
+                    </button>
+                  </div>
+
+                  <FolderCard
+                    category={category}
+                    onSelectAction={handleOpenActionModal}
+                    onInspect={handleInspectCluster}
+                    onToast={showToast}
+                  />
+                </div>
+              );
+            })}
+          </div>
         )}
       </main>
+
+      {/* Floating Bulk Action Bar with Persistent Running Total (Fix #3 & #4) */}
+      <BulkActionBar
+        selectedClusters={selectedClustersList}
+        totalSelectedEmails={totalSelectedEmails}
+        totalSelectedStorageMb={totalSelectedStorageMb}
+        hasSensitiveSelected={hasSensitiveSelected}
+        isExecuting={isExecutingAction}
+        onExecuteBulkAction={handleExecuteBulkAction}
+        onClearSelection={() => setSelectedClusterIds([])}
+      />
 
       {/* Action Queue Confirmation Modal */}
       <ActionQueueModal

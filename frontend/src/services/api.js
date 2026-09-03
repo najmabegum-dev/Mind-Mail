@@ -44,6 +44,8 @@ export const scanApi = {
 export const categoriesApi = {
   getCategories: (userId = 'demo-user-1') => 
     apiClient.get(`/categories?user_id=${userId}`),
+  getCategoriesRollup: (userId = 'demo-user-1') => 
+    apiClient.get(`/categories/rollup?user_id=${userId}`),
   getClusterEmails: (clusterId) => 
     apiClient.get(`/categories/${encodeURIComponent(clusterId)}/emails`),
 };
@@ -51,6 +53,10 @@ export const categoriesApi = {
 export const actionsApi = {
   approveAction: (data) => 
     apiClient.post('/actions/approve', data),
+  bulkApproveAction: (data) => 
+    apiClient.post('/actions/bulk-approve', data),
+  unsubscribe: (data) => 
+    apiClient.post('/actions/unsubscribe', data),
 };
 
 export const feedbackApi = {
