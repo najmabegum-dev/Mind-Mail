@@ -106,6 +106,9 @@ export default function DashboardPage({ user, onLogout }) {
     fetchCategories();
   }, []);
 
+  // Scan Limit / Depth (1000, 3000, 5000, 10000)
+  const [scanLimit, setScanLimit] = useState(3000);
+
   const handleDatePresetChange = (preset) => {
     setDatePreset(preset);
     const now = new Date();
@@ -132,8 +135,12 @@ export default function DashboardPage({ user, onLogout }) {
     } else if (preset === 'year1') {
       const d = new Date();
       d.setDate(d.getDate() - 365);
-      setFromDate(''); // No lower bound
-      setToDate(d.toISOString().split('T')[0]); // Before 1 year ago
+      setFromDate(d.toISOString().split('T')[0]); // From 1 year ago
+      setToDate(todayStr); // To today!
+      setShowCustomDates(false);
+    } else if (preset === 'allTime') {
+      setFromDate('');
+      setToDate('');
       setShowCustomDates(false);
     } else if (preset === 'custom') {
       setShowCustomDates(true);
@@ -148,7 +155,7 @@ export default function DashboardPage({ user, onLogout }) {
     setEmailsScanned(0);
 
     try {
-      await scanApi.triggerScan(user?.id || 'demo-user-1', 1000, fromDate || null, toDate || null);
+      await scanApi.triggerScan(user?.id || 'demo-user-1', scanLimit, fromDate || null, toDate || null);
 
       const interval = setInterval(async () => {
         try {
@@ -521,13 +528,40 @@ export default function DashboardPage({ user, onLogout }) {
               </motion.div>
             )}
 
+            {/* Scan Depth Selector */}
+            <div className="flex flex-wrap items-center gap-1.5 pt-1 text-xs border-t border-slate-800/80">
+              <span className="text-[11px] text-slate-400 pl-1 pr-1 font-medium flex items-center gap-1">
+                <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
+                <span>Scan Depth:</span>
+              </span>
+              {[
+                { id: 1000, label: '1,000' },
+                { id: 3000, label: '3,000 (Recommended)' },
+                { id: 5000, label: '5,000 (Deep)' },
+                { id: 10000, label: '10,000 (Full)' },
+              ].map((d) => (
+                <button
+                  key={d.id}
+                  type="button"
+                  onClick={() => setScanLimit(d.id)}
+                  className={`px-2.5 py-1 rounded-xl text-[11px] font-medium transition ${
+                    scanLimit === d.id
+                      ? 'bg-indigo-600/40 text-indigo-200 border border-indigo-500/50 font-semibold shadow'
+                      : 'text-slate-400 hover:text-white bg-slate-900 border border-slate-800'
+                  }`}
+                >
+                  {d.label}
+                </button>
+              ))}
+            </div>
+
             <button
               onClick={triggerScan}
               disabled={isScanning}
               className="w-full py-3 px-5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/25 disabled:opacity-50 transition transform active:scale-95"
             >
               <RefreshCw className={`w-4 h-4 ${isScanning ? 'animate-spin' : ''}`} />
-              <span>{isScanning ? 'Scanning Inbox Range...' : 'Scan Selected Range'}</span>
+              <span>{isScanning ? 'Scanning Inbox Range...' : `Scan Selected Range (up to ${scanLimit.toLocaleString()} emails)`}</span>
             </button>
           </div>
         </div>

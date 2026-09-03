@@ -107,7 +107,7 @@ async def trigger_scan(
     background_tasks: BackgroundTasks, 
     user_id: str = "demo-user-1", 
     token: str = None, 
-    limit: int = 500,
+    limit: int = 3000,
     from_date: str = None,
     to_date: str = None
 ):
