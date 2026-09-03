@@ -3,7 +3,7 @@ from typing import List
 from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
-    PROJECT_NAME: str = "[Project Name]"
+    PROJECT_NAME: str = "MailMind"
     PORT: int = 8000
     HOST: str = "0.0.0.0"
     ENVIRONMENT: str = "development"
@@ -27,8 +27,10 @@ class Settings(BaseSettings):
     GOOGLE_CLIENT_SECRET: str = ""
     GOOGLE_REDIRECT_URI: str = "http://localhost:8000/oauth/callback"
 
-    # LLM Settings
+    # LLM Settings (Pluggable BYO API Keys)
     OPENAI_API_KEY: str = ""
+    ANTHROPIC_API_KEY: str = ""
+    GEMINI_API_KEY: str = ""
     EMBEDDING_MODEL: str = "text-embedding-3-small"
     LLM_MODEL: str = "gpt-4o-mini"
 

@@ -1,10 +1,10 @@
-# [Project Name] — AI Multi-Agent Gmail Sorting & Cleanup Assistant
+# MailMind — AI Multi-Agent Gmail Sorting & Cleanup Assistant
 
 **Product Requirements Document (PRD)**  
 **Prepared by:** Najma | AI Engineer  
 **Version:** 0.1 (Draft for prototype build)  
 
-This document captures the product vision, architecture, workflows, feature scope, and post-PRD build/launch plan for **[Project Name]**, discussed and refined in a working session. It is intended to be handed directly into an agentic dev environment (e.g. Antigravity) to begin implementation.
+This document captures the product vision, architecture, workflows, feature scope, and post-PRD build/launch plan for **MailMind**, discussed and refined in a working session. It is intended to be handed directly into an agentic dev environment (e.g. Antigravity) to begin implementation.
 
 ---
 

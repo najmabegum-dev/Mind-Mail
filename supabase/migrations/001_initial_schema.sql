@@ -1,4 +1,4 @@
--- Initial Schema for [Project Name] (AI Multi-Agent Gmail Assistant)
+-- Initial Schema for MailMind (AI Multi-Agent Gmail Assistant)
 -- Enables UUID extension if not already enabled
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 

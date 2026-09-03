@@ -20,7 +20,7 @@ export default function StatsLeaderboard({ isOpen, onClose }) {
     }
   }, [isOpen]);
 
-  const shareText = `I just reclaimed space and organized my cluttered inbox with [Project Name]! Over ${stats.total_emails_scanned.toLocaleString()} emails scanned and ${stats.total_storage_freed_gb} GB freed across users with multi-agent intelligence! 🚀`;
+  const shareText = `I just reclaimed space and organized my cluttered inbox with MailMind! Over ${stats.total_emails_scanned.toLocaleString()} emails scanned and ${stats.total_storage_freed_gb} GB freed across users with multi-agent intelligence! 🚀`;
 
   const handleCopyShare = () => {
     navigator.clipboard.writeText(shareText);

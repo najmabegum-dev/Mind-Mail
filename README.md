@@ -1,4 +1,4 @@
-# [Project Name] 📬 🤖
+# MailMind 📬 🤖
 
 > **AI Multi-Agent Gmail Sorting & Cleanup Assistant**  
 > Connect your Gmail, understand your inbox at a narrative level, and safely reclaim storage without fear of losing critical emails.
@@ -12,17 +12,11 @@
 
 ---
 
-## 📌 Notice on Project Name
-> [!NOTE]
-> The project name is currently set to the placeholder **`[Project Name]`** (or `[project-name]` / `[PROJECT_NAME]`). When you decide on a final name, run a project-wide find-and-replace to update this document and associated configs.
-
----
-
 ## 📖 Overview
 
 Modern email inboxes easily accumulate tens of thousands of unread, uncategorized emails (10,000+ emails, often over 50% unopened). Existing solutions either apply shallow rule-based filters (sender/subject matches) or broad, generic AI tags (`newsletter`, `promotions`, `social`).
 
-**[Project Name]** takes a fundamentally different approach:
+**MailMind** takes a fundamentally different approach:
 1. **Deep Narrative Understanding:** It doesn't just tag your emails; it tells you what your inbox actually contains (e.g. *"62 emails from Unstop about hackathon reminders, 40 unopened"*).
 2. **Organic Semantic Clustering:** Uses vector embeddings and semantic clustering to group emails into natural clusters without fragile, hardcoded filter rules.
 3. **Safe, User-Approved Cleanups:** Implements an explicit approval queue and a 30-day recovery bin — no action ever executes without explicit confirmation.
@@ -62,7 +56,7 @@ flowchart TD
 
 ## 🤖 Multi-Agent Pipeline (LangGraph)
 
-Instead of relying on a single monolith prompt, **[Project Name]** executes a specialized LangGraph multi-agent pipeline:
+Instead of relying on a single monolith prompt, **MailMind** executes a specialized LangGraph multi-agent pipeline:
 
 ```mermaid
 graph LR

@@ -13,7 +13,7 @@ export default function Navbar({ user, onOpenStats, onOpenFeedback, onLogout }) 
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="font-bold text-lg text-white tracking-tight">[Project Name]</span>
+              <span className="font-bold text-lg text-white tracking-tight">MailMind</span>
               <span className="text-[10px] uppercase font-semibold px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
                 Agentic v0.1
               </span>

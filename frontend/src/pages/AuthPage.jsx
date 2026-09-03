@@ -54,7 +54,7 @@ export default function AuthPage({ onAuthSuccess }) {
           <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-indigo-600 to-purple-500 mx-auto flex items-center justify-center shadow-lg shadow-indigo-500/20 mb-3">
             <Mail className="w-7 h-7 text-white" />
           </div>
-          <h1 className="text-2xl font-bold text-white tracking-tight">[Project Name]</h1>
+          <h1 className="text-2xl font-bold text-white tracking-tight">MailMind</h1>
           <p className="text-xs text-slate-400 mt-1">
             AI Multi-Agent Gmail Sorting & Cleanup Assistant
           </p>
