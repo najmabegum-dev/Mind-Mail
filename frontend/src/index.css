@@ -6,7 +6,12 @@
   body {
     background-color: #FFFBF3;
     color: #1e293b;
-    @apply font-sans selection:bg-citrus selection:text-slate-950;
+    @apply font-sans;
+  }
+
+  ::selection {
+    background-color: #FFA62B;
+    color: #0f172a;
   }
 }
 
