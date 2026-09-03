@@ -106,20 +106,6 @@ export default function DashboardPage({ user, onLogout }) {
     fetchCategories();
   }, []);
 
-  // Mediterranean Citrus (Cream) vs Amalfi Navy (Dark) Theme
-  const [theme, setTheme] = useState(() => localStorage.getItem('mailmind_theme') || 'cream');
-
-  useEffect(() => {
-    document.body.className = `theme-${theme}`;
-    localStorage.setItem('mailmind_theme', theme);
-  }, [theme]);
-
-  const toggleTheme = () => {
-    setTheme(prev => prev === 'cream' ? 'dark' : 'cream');
-  };
-
-  const isCream = theme === 'cream';
-
   // Scan Limit / Depth (1000, 3000, 5000, 10000)
   const [scanLimit, setScanLimit] = useState(3000);
 
@@ -314,15 +300,9 @@ export default function DashboardPage({ user, onLogout }) {
   const hasSensitiveSelected = selectedClustersList.some(c => c.needs_review);
 
   return (
-    <div className={`min-h-screen flex flex-col transition-colors duration-300 ${
-      isCream 
-        ? 'bg-[#FAF6EE] text-slate-800 selection:bg-darkred selection:text-white' 
-        : 'bg-[#0B1325] text-slate-100 selection:bg-darkred selection:text-white'
-    }`}>
+    <div className="min-h-screen bg-warmwhite text-slate-900 flex flex-col selection:bg-citrus selection:text-slate-950">
       <Navbar
         user={user}
-        theme={theme}
-        onToggleTheme={toggleTheme}
         onOpenStats={() => setIsStatsOpen(true)}
         onOpenFeedback={() => setIsFeedbackOpen(true)}
         onLogout={onLogout}
@@ -335,29 +315,27 @@ export default function DashboardPage({ user, onLogout }) {
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="fixed top-20 right-6 z-50 bg-darkred text-white px-4 py-2.5 rounded-2xl shadow-glow-red border border-darkred/40 text-xs font-semibold flex items-center gap-2"
+            className="fixed top-20 right-6 z-50 bg-amalfitile text-white px-4 py-2.5 rounded-2xl shadow-amalfi-struct border border-amalfitile/40 text-xs font-bold flex items-center gap-2"
           >
             <CheckCircle2 className="w-4 h-4" />
             <span>{toastMessage}</span>
           </motion.div>
         )}
 
-        {/* Google Session Expired Warning Banner */}
+        {/* Google Session Expired Warning Banner (Coral Flame #E8543F ONLY for urgency) */}
         {realStats?.session_expired && (
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            className={`border rounded-3xl p-5 sm:p-6 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xl ${
-              isCream ? 'bg-amber-100 border-amber-300 text-amber-950' : 'bg-amber-500/10 border-amber-500/30 text-amber-300'
-            }`}
+            className="border-2 border-coralflame/30 bg-coralflame/10 rounded-3xl p-5 sm:p-6 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-coral-alert text-slate-900"
           >
             <div className="flex items-center gap-3.5">
-              <div className="p-3 rounded-2xl bg-amber-500/20 text-amber-600 border border-amber-500/30 shrink-0">
+              <div className="p-3 rounded-2xl bg-coralflame/20 text-coralflame border border-coralflame/40 shrink-0">
                 <AlertTriangle className="w-6 h-6" />
               </div>
               <div>
-                <h3 className={`text-sm font-bold ${isCream ? 'text-amber-950' : 'text-white'}`}>Google OAuth Session Expired</h3>
-                <p className={`text-xs mt-0.5 ${isCream ? 'text-amber-900' : 'text-slate-300'}`}>
+                <h3 className="text-sm font-bold text-coralflame-dark">Google OAuth Session Expired</h3>
+                <p className="text-xs text-slate-700 mt-0.5 font-medium">
                   Google security access tokens expire after 1 hour. Please reconnect your Gmail in 1 click to resume scanning your real inbox.
                 </p>
               </div>
@@ -365,7 +343,7 @@ export default function DashboardPage({ user, onLogout }) {
 
             <button
               onClick={handleReconnectGmail}
-              className="px-5 py-2.5 rounded-2xl bg-darkred hover:bg-darkred-700 text-white font-bold text-xs flex items-center gap-2 shrink-0 shadow-glow-red transition transform active:scale-95"
+              className="px-5 py-2.5 rounded-2xl bg-coralflame hover:bg-coralflame-hover text-white font-bold text-xs flex items-center gap-2 shrink-0 shadow-coral-alert transition transform active:scale-95"
             >
               <span>Reconnect Gmail</span>
               <ExternalLink className="w-3.5 h-3.5" />
@@ -376,37 +354,27 @@ export default function DashboardPage({ user, onLogout }) {
         {/* ========================================================================= */}
         {/* 1. TOP TIER: OVERALL GMAIL ACCOUNT DATA (LIFETIME BASELINE)               */}
         {/* ========================================================================= */}
-        <div className={`border rounded-3xl p-6 sm:p-7 shadow-xl relative overflow-hidden transition-colors duration-300 ${
-          isCream 
-            ? 'bg-white border-amber-900/15 shadow-amber-950/5' 
-            : 'bg-[#111D36]/90 border-amalfitile/30 shadow-2xl'
-        }`}>
-          <div className={`flex flex-col md:flex-row md:items-center justify-between gap-4 pb-5 border-b ${
-            isCream ? 'border-amber-900/10' : 'border-slate-800'
-          }`}>
+        <div className="bg-[#FDFBF5] border border-[#EEDFB8] rounded-3xl p-6 sm:p-7 shadow-sm relative overflow-hidden">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-5 border-b border-[#EEDFB8]/70">
             <div>
               <div className="flex items-center gap-2 mb-1.5">
-                <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-seabreeze/20 text-seabreeze-dark border border-seabreeze/40 flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-amalfitile animate-pulse" />
                   Account: {realStats?.email_address || 'Connected User'}
                 </span>
-                <span className={`text-[11px] ${isCream ? 'text-slate-500' : 'text-slate-400'}`}>Exact Google Labels API</span>
+                <span className="text-[11px] text-slate-500 font-medium">Exact Google Labels API</span>
               </div>
-              <h1 className={`text-xl sm:text-2xl font-extrabold tracking-tight ${isCream ? 'text-slate-900' : 'text-white'}`}>
+              <h1 className="text-xl sm:text-2xl font-extrabold text-amalfitile-dark tracking-tight">
                 Overall Mailbox Baseline
               </h1>
-              <p className={`text-xs mt-0.5 ${isCream ? 'text-slate-600' : 'text-slate-400'}`}>
+              <p className="text-xs text-slate-600 mt-0.5 font-medium">
                 Account-wide metrics queried directly from your primary Inbox, labels, and storage.
               </p>
             </div>
 
             <button
               onClick={fetchProfileStats}
-              className={`self-start md:self-auto px-3.5 py-2 rounded-xl text-xs font-medium flex items-center gap-1.5 transition shadow ${
-                isCream 
-                  ? 'bg-amber-50 hover:bg-amber-100 text-slate-700 border border-amber-200' 
-                  : 'bg-slate-800 hover:bg-slate-700 text-slate-200'
-              }`}
+              className="self-start md:self-auto px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition bg-white hover:bg-[#FBF6E9] text-amalfitile border border-[#EEDFB8] shadow-sm"
             >
               <RefreshCw className="w-3.5 h-3.5 text-amalfitile" />
               <span>Refresh Baseline</span>
@@ -415,86 +383,74 @@ export default function DashboardPage({ user, onLogout }) {
 
           {/* Overall Baseline Metrics Grid */}
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3.5 pt-5">
-            <div className={`border rounded-2xl p-4 transition ${
-              isCream ? 'bg-[#FBF8EF] border-amber-900/10' : 'bg-[#080E1C]/80 border-[#1E3156]'
-            }`}>
-              <div className={`flex items-center justify-between text-xs mb-1 ${isCream ? 'text-slate-500' : 'text-slate-400'}`}>
+            <div className="bg-white border border-[#EEDFB8]/70 rounded-2xl p-4 shadow-sm">
+              <div className="flex items-center justify-between text-xs mb-1 text-slate-500">
                 <span>Primary Inbox</span>
                 <Inbox className="w-4 h-4 text-amalfitile" />
               </div>
-              <span className={`text-2xl font-bold font-mono ${isCream ? 'text-slate-900' : 'text-white'}`}>
+              <span className="text-2xl font-extrabold font-mono text-amalfitile-dark">
                 {(realStats?.inbox_total ?? 0).toLocaleString()}
               </span>
-              <p className={`text-[11px] mt-0.5 ${isCream ? 'text-slate-500' : 'text-slate-500'}`}>Total in Inbox label</p>
+              <p className="text-[11px] mt-0.5 text-slate-500 font-medium">Total in Inbox label</p>
             </div>
 
-            <div className={`border rounded-2xl p-4 transition ${
-              isCream ? 'bg-[#FBF8EF] border-amber-900/10' : 'bg-[#080E1C]/80 border-[#1E3156]'
-            }`}>
-              <div className={`flex items-center justify-between text-xs mb-1 ${isCream ? 'text-slate-500' : 'text-slate-400'}`}>
+            <div className="bg-white border border-[#EEDFB8]/70 rounded-2xl p-4 shadow-sm">
+              <div className="flex items-center justify-between text-xs mb-1 text-slate-500">
                 <span>Inbox Unread</span>
                 <FolderSearch className="w-4 h-4 text-citrus" />
               </div>
-              <span className="text-2xl font-bold text-citrus font-mono">
+              <span className="text-2xl font-extrabold text-citrus-dark font-mono">
                 {(realStats?.inbox_unread ?? 0).toLocaleString()}
               </span>
-              <p className={`text-[11px] mt-0.5 ${isCream ? 'text-slate-500' : 'text-slate-500'}`}>
+              <p className="text-[11px] mt-0.5 text-slate-500 font-medium">
                 {realStats?.inbox_total 
                   ? `${Math.round((realStats.inbox_unread / realStats.inbox_total) * 100)}% unread rate` 
                   : '0%'}
               </p>
             </div>
 
-            <div className={`border rounded-2xl p-4 transition ${
-              isCream ? 'bg-[#FBF8EF] border-amber-900/10' : 'bg-[#080E1C]/80 border-[#1E3156]'
-            }`}>
-              <div className={`flex items-center justify-between text-xs mb-1 ${isCream ? 'text-slate-500' : 'text-slate-400'}`}>
+            <div className="bg-white border border-[#EEDFB8]/70 rounded-2xl p-4 shadow-sm">
+              <div className="flex items-center justify-between text-xs mb-1 text-slate-500">
                 <span>Inbox Opened</span>
-                <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                <CheckCircle2 className="w-4 h-4 text-emerald-600" />
               </div>
-              <span className={`text-2xl font-bold font-mono ${isCream ? 'text-emerald-700' : 'text-emerald-300'}`}>
+              <span className="text-2xl font-extrabold font-mono text-emerald-700">
                 {(realStats?.inbox_read ?? 0).toLocaleString()}
               </span>
-              <p className={`text-[11px] mt-0.5 ${isCream ? 'text-slate-500' : 'text-slate-500'}`}>Read & opened</p>
+              <p className="text-[11px] mt-0.5 text-slate-500 font-medium">Read & opened</p>
             </div>
 
-            <div className={`border rounded-2xl p-4 transition ${
-              isCream ? 'bg-[#FBF8EF] border-amber-900/10' : 'bg-[#080E1C]/80 border-[#1E3156]'
-            }`}>
-              <div className={`flex items-center justify-between text-xs mb-1 ${isCream ? 'text-slate-500' : 'text-slate-400'}`}>
+            <div className="bg-white border border-[#EEDFB8]/70 rounded-2xl p-4 shadow-sm">
+              <div className="flex items-center justify-between text-xs mb-1 text-slate-500">
                 <span>All Mail (Total)</span>
                 <Mail className="w-4 h-4 text-amalfitile" />
               </div>
-              <span className={`text-2xl font-bold font-mono ${isCream ? 'text-slate-900' : 'text-white'}`}>
+              <span className="text-2xl font-extrabold font-mono text-slate-900">
                 {(realStats?.all_mail_total ?? 0).toLocaleString()}
               </span>
-              <p className={`text-[11px] mt-0.5 ${isCream ? 'text-slate-500' : 'text-slate-500'}`}>Inbox, Archive & Sent</p>
+              <p className="text-[11px] mt-0.5 text-slate-500 font-medium">Inbox, Archive & Sent</p>
             </div>
 
-            <div className={`border rounded-2xl p-4 transition ${
-              isCream ? 'bg-[#FBF8EF] border-amber-900/10' : 'bg-[#080E1C]/80 border-[#1E3156]'
-            }`}>
-              <div className={`flex items-center justify-between text-xs mb-1 ${isCream ? 'text-slate-500' : 'text-slate-400'}`}>
+            <div className="bg-white border border-[#EEDFB8]/70 rounded-2xl p-4 shadow-sm">
+              <div className="flex items-center justify-between text-xs mb-1 text-slate-500">
                 <span>Conversations</span>
                 <MessageSquare className="w-4 h-4 text-amalfitile" />
               </div>
-              <span className={`text-2xl font-bold font-mono ${isCream ? 'text-amalfitile' : 'text-seabreeze'}`}>
+              <span className="text-2xl font-extrabold font-mono text-amalfitile">
                 {(realStats?.inbox_threads ?? 0).toLocaleString()}
               </span>
-              <p className={`text-[11px] mt-0.5 ${isCream ? 'text-slate-500' : 'text-slate-500'}`}>Grouped threads</p>
+              <p className="text-[11px] mt-0.5 text-slate-500 font-medium">Grouped threads</p>
             </div>
 
-            <div className={`border rounded-2xl p-4 transition ${
-              isCream ? 'bg-[#FBF8EF] border-amber-900/10' : 'bg-[#080E1C]/80 border-[#1E3156]'
-            }`}>
-              <div className={`flex items-center justify-between text-xs mb-1 ${isCream ? 'text-slate-500' : 'text-slate-400'}`}>
+            <div className="bg-white border border-[#EEDFB8]/70 rounded-2xl p-4 shadow-sm">
+              <div className="flex items-center justify-between text-xs mb-1 text-slate-500">
                 <span>Total Storage</span>
-                <HardDrive className="w-4 h-4 text-darkred" />
+                <HardDrive className="w-4 h-4 text-citrus" />
               </div>
-              <span className="text-2xl font-bold text-darkred font-mono">
+              <span className="text-2xl font-extrabold text-slate-900 font-mono">
                 {(realStats?.estimated_storage_mb ?? 0)} MB
               </span>
-              <p className="text-[11px] text-slate-500 mt-0.5">Estimated footprint</p>
+              <p className="text-[11px] text-slate-500 mt-0.5 font-medium">Estimated footprint</p>
             </div>
           </div>
         </div>
@@ -502,28 +458,22 @@ export default function DashboardPage({ user, onLogout }) {
         {/* ========================================================================= */}
         {/* 2. MIDDLE TIER: DATE RANGE SELECTION & SCAN ACTION BUTTON                 */}
         {/* ========================================================================= */}
-        <div className={`border rounded-3xl p-6 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-6 shadow-xl transition-colors duration-300 ${
-          isCream
-            ? 'bg-white border-amber-900/15 shadow-amber-950/5'
-            : 'bg-[#111D36]/90 border-amalfitile/30 shadow-2xl'
-        }`}>
+        <div className="bg-[#FDFBF5] border border-[#EEDFB8] rounded-3xl p-6 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-6 shadow-sm">
           <div className="space-y-1">
-            <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-amalfitile/15 text-amalfitile border border-amalfitile/30">
+            <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-amalfitile/10 text-amalfitile border border-amalfitile/25">
               Inbox Scanner & Intelligence Filter
             </span>
-            <h2 className={`text-xl font-bold tracking-tight ${isCream ? 'text-slate-900' : 'text-white'}`}>
+            <h2 className="text-xl font-extrabold text-amalfitile-dark tracking-tight">
               Select Timeframe to Analyze
             </h2>
-            <p className={`text-xs max-w-lg ${isCream ? 'text-slate-600' : 'text-slate-400'}`}>
+            <p className="text-xs text-slate-600 max-w-lg font-medium">
               Choose a specific date window or preset. MailMind will query your Gmail inbox directly with zero limit cut-offs.
             </p>
           </div>
 
-          <div className={`flex flex-col gap-3 p-3.5 rounded-2xl border shrink-0 md:min-w-[420px] ${
-            isCream ? 'bg-[#FBF8EF] border-amber-900/10' : 'bg-[#080E1C]/90 border-slate-800'
-          }`}>
+          <div className="flex flex-col gap-3 p-3.5 rounded-2xl border border-[#EEDFB8]/80 bg-white shrink-0 md:min-w-[420px] shadow-sm">
             <div className="flex flex-wrap items-center gap-1.5 text-xs">
-              <span className={`text-[11px] pl-1 pr-1 font-medium flex items-center gap-1 ${isCream ? 'text-slate-600' : 'text-slate-400'}`}>
+              <span className="text-[11px] pl-1 pr-1 font-bold text-slate-500 flex items-center gap-1">
                 <Calendar className="w-3.5 h-3.5 text-amalfitile" />
                 <span>Presets:</span>
               </span>
@@ -539,12 +489,10 @@ export default function DashboardPage({ user, onLogout }) {
                   key={p.id}
                   type="button"
                   onClick={() => handleDatePresetChange(p.id)}
-                  className={`px-3 py-1 rounded-xl text-xs font-medium transition ${
+                  className={`px-3 py-1 rounded-xl text-xs font-bold transition ${
                     datePreset === p.id 
-                      ? 'bg-amalfitile text-white shadow-glow-blue font-semibold' 
-                      : isCream
-                      ? 'text-slate-600 hover:text-slate-900 hover:bg-amber-100/70'
-                      : 'text-slate-400 hover:text-white hover:bg-slate-900'
+                      ? 'bg-amalfitile text-white shadow-sm font-bold' 
+                      : 'bg-white border border-[#EEDFB8] text-slate-600 hover:text-amalfitile hover:bg-[#FBF6E9]'
                   }`}
                 >
                   {p.label}
@@ -557,38 +505,32 @@ export default function DashboardPage({ user, onLogout }) {
               <motion.div
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: 'auto' }}
-                className={`flex items-center gap-2 pt-2 border-t text-xs ${isCream ? 'border-amber-900/10' : 'border-slate-800/80'}`}
+                className="flex items-center gap-2 pt-2 border-t border-[#EEDFB8]/70 text-xs"
               >
-                <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border flex-1 ${
-                  isCream ? 'bg-white border-amber-200 text-slate-800' : 'bg-slate-900 border-slate-800 text-white'
-                }`}>
-                  <span className="text-slate-500 text-[10px]">From:</span>
+                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-[#EEDFB8] bg-[#FDFBF5] text-slate-800 flex-1">
+                  <span className="text-slate-500 text-[10px] font-bold">From:</span>
                   <input
                     type="date"
                     value={fromDate}
                     onChange={(e) => setFromDate(e.target.value)}
-                    className="bg-transparent text-xs focus:outline-none w-full"
+                    className="bg-transparent text-xs focus:outline-none w-full font-medium"
                   />
                 </div>
-                <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border flex-1 ${
-                  isCream ? 'bg-white border-amber-200 text-slate-800' : 'bg-slate-900 border-slate-800 text-white'
-                }`}>
-                  <span className="text-slate-500 text-[10px]">To:</span>
+                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-[#EEDFB8] bg-[#FDFBF5] text-slate-800 flex-1">
+                  <span className="text-slate-500 text-[10px] font-bold">To:</span>
                   <input
                     type="date"
                     value={toDate}
                     onChange={(e) => setToDate(e.target.value)}
-                    className="bg-transparent text-xs focus:outline-none w-full"
+                    className="bg-transparent text-xs focus:outline-none w-full font-medium"
                   />
                 </div>
               </motion.div>
             )}
 
             {/* Scan Depth Selector */}
-            <div className={`flex flex-wrap items-center gap-1.5 pt-1 text-xs border-t ${
-              isCream ? 'border-amber-900/10' : 'border-slate-800/80'
-            }`}>
-              <span className={`text-[11px] pl-1 pr-1 font-medium flex items-center gap-1 ${isCream ? 'text-slate-600' : 'text-slate-400'}`}>
+            <div className="flex flex-wrap items-center gap-1.5 pt-1 text-xs border-t border-[#EEDFB8]/70">
+              <span className="text-[11px] pl-1 pr-1 font-bold text-slate-500 flex items-center gap-1">
                 <Sparkles className="w-3.5 h-3.5 text-citrus" />
                 <span>Scan Depth:</span>
               </span>
@@ -602,12 +544,10 @@ export default function DashboardPage({ user, onLogout }) {
                   key={d.id}
                   type="button"
                   onClick={() => setScanLimit(d.id)}
-                  className={`px-2.5 py-1 rounded-xl text-[11px] font-medium transition ${
+                  className={`px-2.5 py-1 rounded-xl text-[11px] font-bold transition ${
                     scanLimit === d.id
-                      ? 'bg-amalfitile text-white shadow-sm font-semibold'
-                      : isCream
-                      ? 'text-slate-600 hover:text-slate-900 bg-white border border-amber-200'
-                      : 'text-slate-400 hover:text-white bg-slate-900 border border-slate-800'
+                      ? 'bg-amalfitile text-white shadow-sm font-bold'
+                      : 'bg-white border border-[#EEDFB8] text-slate-600 hover:text-amalfitile hover:bg-[#FBF6E9]'
                   }`}
                 >
                   {d.label}
@@ -615,10 +555,11 @@ export default function DashboardPage({ user, onLogout }) {
               ))}
             </div>
 
+            {/* Hero Action Button: Citrus Zest #FFA62B dominates as the primary CTA */}
             <button
               onClick={triggerScan}
               disabled={isScanning}
-              className="w-full py-3.5 px-5 rounded-xl bg-darkred hover:bg-darkred-700 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-glow-red border border-darkred-500/40 disabled:opacity-50 transition transform active:scale-95"
+              className="w-full py-3.5 px-5 rounded-2xl bg-citrus hover:bg-citrus-hover text-slate-950 font-extrabold text-sm flex items-center justify-center gap-2 shadow-citrus-hero border border-[#FFA62B] disabled:opacity-50 transition transform active:scale-95"
             >
               <RefreshCw className={`w-4 h-4 ${isScanning ? 'animate-spin' : ''}`} />
               <span>{isScanning ? 'Scanning Inbox Range...' : `Scan Selected Range (up to ${scanLimit.toLocaleString()} emails)`}</span>
@@ -638,111 +579,94 @@ export default function DashboardPage({ user, onLogout }) {
         {/* ========================================================================= */}
         {/* 3. LOWER TIER: METRICS OF THE SELECTED RANGE (AFTER SCAN)                 */}
         {/* ========================================================================= */}
-        <div className={`border rounded-3xl p-6 sm:p-7 shadow-lg transition-colors duration-300 ${
-          isCream
-            ? 'bg-[#FDFBF7] border-amalfitile/30 shadow-amalfitile/5'
-            : 'bg-slate-900/80 border-amalfitile/40 shadow-glow-blue'
-        }`}>
-          <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b mb-5 ${
-            isCream ? 'border-amalfitile/15' : 'border-amalfitile/20'
-          }`}>
+        <div className="bg-white border border-[#EEDFB8] rounded-3xl p-6 sm:p-7 shadow-sm">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-[#EEDFB8]/70 mb-5">
             <div>
-              <span className="text-[11px] font-bold uppercase tracking-wider text-amalfitile bg-amalfitile/15 px-2.5 py-0.5 rounded-full border border-amalfitile/25">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-seabreeze-dark bg-seabreeze/20 px-2.5 py-0.5 rounded-full border border-seabreeze/40">
                 Timeframe Analysis Metrics
               </span>
-              <h3 className={`text-lg font-bold mt-1 ${isCream ? 'text-slate-900' : 'text-white'}`}>
+              <h3 className="text-lg font-extrabold text-amalfitile-dark mt-1">
                 Selected Window: {rangeMetrics?.from_date || fromDate || 'Start'} → {rangeMetrics?.to_date || toDate || 'Present'}
               </h3>
-              <p className={`text-xs mt-0.5 ${isCream ? 'text-slate-600' : 'text-slate-400'}`}>
+              <p className="text-xs text-slate-600 mt-0.5 font-medium">
                 Breakdown of emails and reclaimable space exclusively within this selected date range.
               </p>
             </div>
-            <span className="text-xs text-amalfitile font-mono px-3 py-1 rounded-xl bg-amalfitile/15 border border-amalfitile/25 self-start sm:self-auto font-semibold">
+            <span className="text-xs text-seabreeze-dark font-mono px-3 py-1 rounded-xl bg-seabreeze/15 border border-seabreeze/30 self-start sm:self-auto font-bold">
               {(rangeMetrics?.total_emails ?? categories.reduce((a,c)=>a+c.total_count, 0)).toLocaleString()} emails in slice
             </span>
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3.5">
-            <div className={`border rounded-2xl p-4 transition ${
-              isCream ? 'bg-white border-amber-900/10' : 'bg-slate-950/80 border-slate-800/80'
-            }`}>
-              <div className={`flex items-center justify-between text-xs mb-1 ${isCream ? 'text-slate-500' : 'text-slate-400'}`}>
+            <div className="bg-[#FDFBF5] border border-[#EEDFB8]/70 rounded-2xl p-4 shadow-sm">
+              <div className="flex items-center justify-between text-xs mb-1 text-slate-500">
                 <span>Emails in Window</span>
                 <Mail className="w-3.5 h-3.5 text-amalfitile" />
               </div>
-              <span className={`text-2xl font-bold font-mono ${isCream ? 'text-slate-900' : 'text-white'}`}>
+              <span className="text-2xl font-extrabold font-mono text-slate-900">
                 {(rangeMetrics?.total_emails ?? categories.reduce((a,c)=>a+c.total_count, 0)).toLocaleString()}
               </span>
-              <p className={`text-[11px] mt-0.5 ${isCream ? 'text-slate-500' : 'text-slate-500'}`}>In chosen dates</p>
+              <p className="text-[11px] mt-0.5 text-slate-500 font-medium">In chosen dates</p>
             </div>
 
-            <div className={`border rounded-2xl p-4 transition ${
-              isCream ? 'bg-white border-amber-900/10' : 'bg-slate-950/80 border-slate-800/80'
-            }`}>
-              <div className={`flex items-center justify-between text-xs mb-1 ${isCream ? 'text-slate-500' : 'text-slate-400'}`}>
+            <div className="bg-[#FDFBF5] border border-[#EEDFB8]/70 rounded-2xl p-4 shadow-sm">
+              <div className="flex items-center justify-between text-xs mb-1 text-slate-500">
                 <span>Unopened in Window</span>
                 <FolderSearch className="w-3.5 h-3.5 text-citrus" />
               </div>
-              <span className="text-2xl font-bold text-citrus font-mono">
+              <span className="text-2xl font-extrabold text-citrus-dark font-mono">
                 {(rangeMetrics?.unread_emails ?? categories.reduce((a,c)=>a+c.unread_count, 0)).toLocaleString()}
               </span>
-              <p className={`text-[11px] mt-0.5 ${isCream ? 'text-slate-500' : 'text-slate-500'}`}>
+              <p className="text-[11px] mt-0.5 text-slate-500 font-medium">
                 {(rangeMetrics?.total_emails ?? categories.reduce((a,c)=>a+c.total_count, 0)) > 0
                   ? `${Math.round(((rangeMetrics?.unread_emails ?? categories.reduce((a,c)=>a+c.unread_count, 0)) / (rangeMetrics?.total_emails ?? categories.reduce((a,c)=>a+c.total_count, 0))) * 100)}% unopened`
                   : '0%'}
               </p>
             </div>
 
-            <div className={`border rounded-2xl p-4 transition ${
-              isCream ? 'bg-white border-amber-900/10' : 'bg-slate-950/80 border-slate-800/80'
-            }`}>
-              <div className={`flex items-center justify-between text-xs mb-1 ${isCream ? 'text-slate-500' : 'text-slate-400'}`}>
+            <div className="bg-[#FDFBF5] border border-[#EEDFB8]/70 rounded-2xl p-4 shadow-sm">
+              <div className="flex items-center justify-between text-xs mb-1 text-slate-500">
                 <span>Opened in Window</span>
-                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
               </div>
-              <span className={`text-2xl font-bold font-mono ${isCream ? 'text-emerald-700' : 'text-emerald-300'}`}>
+              <span className="text-2xl font-extrabold font-mono text-emerald-700">
                 {(rangeMetrics?.read_emails ?? Math.max(0, (rangeMetrics?.total_emails ?? 0) - (rangeMetrics?.unread_emails ?? 0))).toLocaleString()}
               </span>
-              <p className={`text-[11px] mt-0.5 ${isCream ? 'text-slate-500' : 'text-slate-500'}`}>Read & opened</p>
+              <p className="text-[11px] mt-0.5 text-slate-500 font-medium">Read & opened</p>
             </div>
 
-            <div className={`border rounded-2xl p-4 transition ${
-              isCream ? 'bg-white border-amber-900/10' : 'bg-slate-950/80 border-slate-800/80'
-            }`}>
-              <div className={`flex items-center justify-between text-xs mb-1 ${isCream ? 'text-slate-500' : 'text-slate-400'}`}>
+            <div className="bg-[#FDFBF5] border border-[#EEDFB8]/70 rounded-2xl p-4 shadow-sm">
+              <div className="flex items-center justify-between text-xs mb-1 text-slate-500">
                 <span>Window Storage</span>
-                <HardDrive className="w-3.5 h-3.5 text-darkred" />
+                <HardDrive className="w-3.5 h-3.5 text-citrus" />
               </div>
-              <span className="text-2xl font-bold text-darkred font-mono">
+              {/* Storage freed hero metric in Citrus Zest #FFA62B */}
+              <span className="text-2xl font-extrabold text-citrus-dark font-mono">
                 {(rangeMetrics?.storage_mb ?? categories.reduce((a,c)=>a+c.estimated_size_mb, 0).toFixed(1))} MB
               </span>
-              <p className={`text-[11px] mt-0.5 ${isCream ? 'text-slate-500' : 'text-slate-500'}`}>Reclaimable space</p>
+              <p className="text-[11px] mt-0.5 text-slate-500 font-medium">Reclaimable space</p>
             </div>
 
-            <div className={`border rounded-2xl p-4 transition ${
-              isCream ? 'bg-white border-amber-900/10' : 'bg-slate-950/80 border-slate-800/80'
-            }`}>
-              <div className={`flex items-center justify-between text-xs mb-1 ${isCream ? 'text-slate-500' : 'text-slate-400'}`}>
+            <div className="bg-[#FDFBF5] border border-[#EEDFB8]/70 rounded-2xl p-4 shadow-sm">
+              <div className="flex items-center justify-between text-xs mb-1 text-slate-500">
                 <span>Brand Clusters</span>
                 <Layers className="w-3.5 h-3.5 text-amalfitile" />
               </div>
-              <span className={`text-2xl font-bold font-mono ${isCream ? 'text-amalfitile' : 'text-seabreeze'}`}>
+              <span className="text-2xl font-extrabold text-amalfitile-dark font-mono">
                 {categories.length}
               </span>
-              <p className={`text-[11px] mt-0.5 ${isCream ? 'text-slate-500' : 'text-slate-500'}`}>Isolated entities</p>
+              <p className="text-[11px] mt-0.5 text-slate-500 font-medium">Isolated entities</p>
             </div>
 
-            <div className={`border rounded-2xl p-4 transition ${
-              isCream ? 'bg-white border-amber-900/10' : 'bg-slate-950/80 border-slate-800/80'
-            }`}>
-              <div className={`flex items-center justify-between text-xs mb-1 ${isCream ? 'text-slate-500' : 'text-slate-400'}`}>
+            <div className="bg-[#FDFBF5] border border-[#EEDFB8]/70 rounded-2xl p-4 shadow-sm">
+              <div className="flex items-center justify-between text-xs mb-1 text-slate-500">
                 <span>Unsubscribe Links</span>
-                <ExternalLink className="w-3.5 h-3.5 text-citrus" />
+                <ExternalLink className="w-3.5 h-3.5 text-seabreeze-dark" />
               </div>
-              <span className="text-2xl font-bold text-citrus font-mono">
+              <span className="text-2xl font-extrabold text-seabreeze-dark font-mono">
                 {(rangeMetrics?.unsubscribe_count ?? 8)}
               </span>
-              <p className={`text-[11px] mt-0.5 ${isCream ? 'text-slate-500' : 'text-slate-500'}`}>1-click headers</p>
+              <p className="text-[11px] mt-0.5 text-slate-500 font-medium">1-click headers</p>
             </div>
           </div>
         </div>
@@ -753,18 +677,14 @@ export default function DashboardPage({ user, onLogout }) {
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pt-2">
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <h2 className={`text-xl font-extrabold tracking-tight ${isCream ? 'text-slate-900' : 'text-white'}`}>
+              <h2 className="text-xl font-extrabold text-amalfitile-dark tracking-tight">
                 {viewMode === 'rollup' ? 'Hierarchical Category Rollup' : 'Itemized Brand Clusters'}
               </h2>
-              <span className={`text-xs px-2.5 py-0.5 rounded-full border ${
-                isCream 
-                  ? 'bg-amber-100/80 text-amber-900 border-amber-300' 
-                  : 'bg-slate-800 text-slate-300 border-slate-700'
-              }`}>
+              <span className="text-xs px-2.5 py-0.5 rounded-full border bg-seabreeze/15 text-seabreeze-dark border-seabreeze/30 font-bold">
                 {viewMode === 'rollup' ? `${rollups.length} parent categories` : `${filteredCategories.length} clusters`}
               </span>
             </div>
-            <p className={`text-xs ${isCream ? 'text-slate-600' : 'text-slate-400'}`}>
+            <p className="text-xs text-slate-600 font-medium">
               {viewMode === 'rollup' 
                 ? 'Parent-level grouping organizing senders into clean categories. Expand any category to see specific brand cards.' 
                 : 'Flat view of all isolated brand clusters with per-sender summaries.'}
@@ -773,32 +693,26 @@ export default function DashboardPage({ user, onLogout }) {
 
           {/* Navigation Controls: View Mode & Multi-Select Helper */}
           <div className="flex flex-wrap items-center gap-2.5">
-            {/* Quick Bulk Select Button (Fix #4: Strictly excludes banking/HR) */}
+            {/* Quick Bulk Select Button (Sea Breeze styling) */}
             <button
               type="button"
               onClick={handleSelectAllActionable}
-              className={`px-3 py-1.5 rounded-xl border text-xs font-semibold flex items-center gap-1.5 transition ${
-                isCream
-                  ? 'bg-white hover:bg-amber-50 text-slate-700 border-amber-200 hover:border-darkred/40'
-                  : 'bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border-slate-800 hover:border-darkred/40'
-              }`}
+              className="px-3 py-1.5 rounded-xl border border-seabreeze/40 bg-white hover:bg-seabreeze/10 text-seabreeze-dark text-xs font-bold flex items-center gap-1.5 transition shadow-sm"
               title="Select all promotional & newsletter clutter (sensitive banking/HR clusters strictly excluded)"
             >
-              <CheckSquare className="w-3.5 h-3.5 text-citrus" />
+              <CheckSquare className="w-3.5 h-3.5 text-amalfitile" />
               <span>Select Routine Clutter</span>
             </button>
 
-            {/* View Mode Toggle (Rollup vs Flat Grid) */}
-            <div className={`flex items-center p-1 rounded-2xl border ${
-              isCream ? 'bg-white border-amber-200' : 'bg-slate-900/90 border-slate-800'
-            }`}>
+            {/* View Mode Toggle (Rollup vs Flat Grid - Amalfi Tile structure) */}
+            <div className="flex items-center p-1 rounded-2xl border border-[#EEDFB8] bg-white shadow-sm">
               <button
                 type="button"
                 onClick={() => setViewMode('rollup')}
-                className={`px-3 py-1 rounded-xl text-xs font-medium transition flex items-center gap-1.5 ${
+                className={`px-3 py-1 rounded-xl text-xs font-bold transition flex items-center gap-1.5 ${
                   viewMode === 'rollup' 
-                    ? 'bg-darkred text-white shadow-glow-red font-semibold' 
-                    : isCream ? 'text-slate-600 hover:text-slate-900' : 'text-slate-400 hover:text-white'
+                    ? 'bg-amalfitile text-white shadow-sm' 
+                    : 'text-slate-600 hover:text-amalfitile'
                 }`}
               >
                 <Layers className="w-3.5 h-3.5" />
@@ -808,10 +722,10 @@ export default function DashboardPage({ user, onLogout }) {
               <button
                 type="button"
                 onClick={() => setViewMode('flat')}
-                className={`px-3 py-1 rounded-xl text-xs font-medium transition flex items-center gap-1.5 ${
+                className={`px-3 py-1 rounded-xl text-xs font-bold transition flex items-center gap-1.5 ${
                   viewMode === 'flat' 
-                    ? 'bg-darkred text-white shadow-glow-red font-semibold' 
-                    : isCream ? 'text-slate-600 hover:text-slate-900' : 'text-slate-400 hover:text-white'
+                    ? 'bg-amalfitile text-white shadow-sm' 
+                    : 'text-slate-600 hover:text-amalfitile'
                 }`}
               >
                 <LayoutGrid className="w-3.5 h-3.5" />
@@ -820,35 +734,34 @@ export default function DashboardPage({ user, onLogout }) {
             </div>
 
             {/* Filter Tabs */}
-            <div className={`flex items-center gap-1 p-1 rounded-2xl border ${
-              isCream ? 'bg-white border-amber-200' : 'bg-slate-900/90 border-slate-800'
-            }`}>
+            <div className="flex items-center gap-1 p-1 rounded-2xl border border-[#EEDFB8] bg-white shadow-sm">
               <button
                 onClick={() => setActiveFilter('all')}
-                className={`px-2.5 py-1 rounded-xl text-xs font-medium transition ${
+                className={`px-2.5 py-1 rounded-xl text-xs font-bold transition ${
                   activeFilter === 'all' 
-                    ? (isCream ? 'bg-amber-100 text-amber-900 font-semibold' : 'bg-slate-800 text-white font-semibold')
-                    : (isCream ? 'text-slate-600 hover:text-slate-900' : 'text-slate-400 hover:text-white')
+                    ? 'bg-amalfitile text-white shadow-sm'
+                    : 'text-slate-600 hover:text-amalfitile'
                 }`}
               >
                 All
               </button>
               <button
                 onClick={() => setActiveFilter('actionable')}
-                className={`px-2.5 py-1 rounded-xl text-xs font-medium transition ${
+                className={`px-2.5 py-1 rounded-xl text-xs font-bold transition ${
                   activeFilter === 'actionable' 
-                    ? (isCream ? 'bg-amber-100 text-amber-900 font-semibold' : 'bg-slate-800 text-white font-semibold')
-                    : (isCream ? 'text-slate-600 hover:text-slate-900' : 'text-slate-400 hover:text-white')
+                    ? 'bg-amalfitile text-white shadow-sm'
+                    : 'text-slate-600 hover:text-amalfitile'
                 }`}
               >
                 Actionable
               </button>
+              {/* Needs Review in Coral Flame #E8543F ONLY */}
               <button
                 onClick={() => setActiveFilter('review')}
-                className={`px-2.5 py-1 rounded-xl text-xs font-medium transition ${
+                className={`px-2.5 py-1 rounded-xl text-xs font-bold transition ${
                   activeFilter === 'review' 
-                    ? 'bg-darkred/15 text-darkred font-semibold' 
-                    : (isCream ? 'text-slate-600 hover:text-slate-900' : 'text-slate-400 hover:text-white')
+                    ? 'bg-coralflame text-white shadow-coral-alert' 
+                    : 'text-coralflame hover:bg-coralflame/10'
                 }`}
               >
                 Needs Review
@@ -861,15 +774,10 @@ export default function DashboardPage({ user, onLogout }) {
         {loadingCategories ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[1, 2, 3, 4, 5, 6].map((n) => (
-              <div key={n} className={`h-44 rounded-3xl border animate-pulse ${
-                isCream ? 'bg-white border-amber-900/10' : 'bg-slate-900/40 border-slate-800'
-              }`} />
+              <div key={n} className="h-44 rounded-3xl border border-[#EEDFB8] bg-[#FDFBF5] animate-pulse" />
             ))}
           </div>
         ) : viewMode === 'rollup' ? (
-          // =========================================================================
-          // HIERARCHICAL ROLLUP VIEW (~6 to 10 Parent Category Cards)
-          // =========================================================================
           <div className="space-y-5">
             {rollups.map((rollupItem) => (
               <CategoryRollupCard
@@ -880,14 +788,10 @@ export default function DashboardPage({ user, onLogout }) {
                 selectedClusterIds={selectedClusterIds}
                 onToggleClusterSelect={handleToggleClusterSelect}
                 onToggleParentSelect={handleToggleParentSelect}
-                theme={theme}
               />
             ))}
           </div>
         ) : (
-          // =========================================================================
-          // FLAT GRID VIEW (Standardized Card Heights, No Gaps)
-          // =========================================================================
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-start">
             {filteredCategories.map((category) => {
               const isSelected = selectedClusterIds.includes(category.cluster_id);
@@ -897,14 +801,10 @@ export default function DashboardPage({ user, onLogout }) {
                     <button
                       type="button"
                       onClick={() => handleToggleClusterSelect(category.cluster_id)}
-                      className={`p-1 rounded border transition ${
-                        isCream
-                          ? 'bg-white/90 border-amber-300 text-slate-600 hover:text-darkred'
-                          : 'bg-slate-950/80 border-slate-700 text-slate-300 hover:text-white'
-                      }`}
+                      className="p-1 rounded border border-[#EEDFB8] bg-white/90 text-slate-500 hover:text-amalfitile transition shadow-sm"
                     >
                       {isSelected ? (
-                        <CheckSquare className="w-4 h-4 text-darkred" />
+                        <CheckSquare className="w-4 h-4 text-amalfitile" />
                       ) : (
                         <Square className="w-4 h-4" />
                       )}
@@ -916,7 +816,6 @@ export default function DashboardPage({ user, onLogout }) {
                     onSelectAction={handleOpenActionModal}
                     onInspect={handleInspectCluster}
                     onToast={showToast}
-                    theme={theme}
                   />
                 </div>
               );
@@ -925,7 +824,7 @@ export default function DashboardPage({ user, onLogout }) {
         )}
       </main>
 
-      {/* Floating Bulk Action Bar with Persistent Running Total (Fix #3 & #4) */}
+      {/* Floating Bulk Action Bar with Persistent Running Total */}
       <BulkActionBar
         selectedClusters={selectedClustersList}
         totalSelectedEmails={totalSelectedEmails}
@@ -934,7 +833,6 @@ export default function DashboardPage({ user, onLogout }) {
         isExecuting={isExecutingAction}
         onExecuteBulkAction={handleExecuteBulkAction}
         onClearSelection={() => setSelectedClusterIds([])}
-        theme={theme}
       />
 
       {/* Action Queue Confirmation Modal */}
