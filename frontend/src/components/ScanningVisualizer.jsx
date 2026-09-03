@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, Layers, Cpu, CheckCircle2, ShieldCheck, Mail } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { Sparkles, Layers, Cpu, Mail } from 'lucide-react';
 
 const STEPS = [
   { label: "OAuth Handshake & Fetch", icon: Mail },
@@ -20,48 +20,41 @@ export default function ScanningVisualizer({ progress, message, emailsScanned })
   }, [progress]);
 
   return (
-    <div className="bg-gradient-to-b from-slate-900 via-indigo-950/20 to-slate-900 border border-indigo-500/30 rounded-3xl p-6 sm:p-8 shadow-2xl relative overflow-hidden">
-      {/* Background glow animation */}
-      <motion.div 
-        className="absolute -top-24 -left-24 w-72 h-72 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none"
-        animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.6, 0.3] }}
-        transition={{ duration: 4, repeat: Infinity }}
-      />
-
+    <div className="bg-[#FDFBF5] border-2 border-amalfitile/30 rounded-3xl p-6 sm:p-8 shadow-amalfi-struct relative overflow-hidden">
       <div className="relative z-10">
         {/* Top Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-2xl bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400">
-              <Sparkles className="w-6 h-6 animate-pulse" />
+            <div className="w-12 h-12 rounded-2xl bg-amalfitile flex items-center justify-center text-white shadow-amalfi-struct">
+              <Sparkles className="w-6 h-6 animate-pulse text-citrus" />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-white tracking-tight flex items-center gap-2">
+              <h2 className="text-xl font-extrabold text-amalfitile-dark tracking-tight flex items-center gap-2">
                 Live Multi-Agent Scanning
-                <span className="text-xs px-2.5 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/40">
+                <span className="text-xs px-2.5 py-0.5 rounded-full bg-amalfitile/15 text-amalfitile border border-amalfitile/30 font-bold">
                   Active Run
                 </span>
               </h2>
-              <p className="text-xs text-slate-400 mt-0.5">
+              <p className="text-xs text-slate-600 mt-0.5 font-medium">
                 Ingesting headers, generating semantic embeddings, and triaging clusters
               </p>
             </div>
           </div>
 
           <div className="text-right">
-            <span className="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-300 font-mono">
+            <span className="text-3xl font-extrabold text-citrus-dark font-mono">
               {progress}%
             </span>
-            <p className="text-xs text-slate-400">
+            <p className="text-xs text-slate-600 font-medium">
               {emailsScanned} emails processed
             </p>
           </div>
         </div>
 
         {/* Animated Progress Bar */}
-        <div className="w-full bg-slate-950/80 rounded-full h-3.5 p-0.5 border border-slate-800 mb-6 overflow-hidden">
+        <div className="w-full bg-[#FBF6E9] rounded-full h-3.5 p-0.5 border border-[#EEDFB8] mb-6 overflow-hidden shadow-inner">
           <motion.div
-            className="h-full bg-gradient-to-r from-indigo-500 via-purple-500 to-emerald-400 rounded-full"
+            className="h-full bg-gradient-to-r from-amalfitile via-seabreeze to-citrus rounded-full"
             initial={{ width: '0%' }}
             animate={{ width: `${progress}%` }}
             transition={{ ease: "easeInOut", duration: 0.5 }}
@@ -78,34 +71,34 @@ export default function ScanningVisualizer({ progress, message, emailsScanned })
             return (
               <div
                 key={idx}
-                className={`p-3 rounded-xl border transition-all ${
+                className={`p-3 rounded-2xl border transition-all ${
                   isActive
-                    ? 'bg-indigo-600/20 border-indigo-500/50 text-white shadow-lg shadow-indigo-500/10'
+                    ? 'bg-white border-amalfitile text-amalfitile-dark shadow-sm'
                     : isDone
-                    ? 'bg-slate-900/60 border-emerald-500/30 text-emerald-300'
-                    : 'bg-slate-950/40 border-slate-800/80 text-slate-500'
+                    ? 'bg-white border-emerald-500/40 text-emerald-700'
+                    : 'bg-white/60 border-[#EEDFB8]/70 text-slate-500'
                 }`}
               >
                 <div className="flex items-center gap-2 mb-1.5">
-                  <Icon className={`w-4 h-4 ${isActive ? 'text-indigo-400 animate-spin-slow' : isDone ? 'text-emerald-400' : 'text-slate-600'}`} />
-                  <span className="text-xs font-semibold truncate">
-                    {isDone ? '✓ Completed' : isActive ? 'Processing...' : `Step ${idx + 1}`}
+                  <Icon className={`w-4 h-4 ${isActive ? 'text-citrus animate-spin-slow' : isDone ? 'text-emerald-600' : 'text-slate-400'}`} />
+                  <span className="text-xs font-bold truncate">
+                    {isDone ? '✓ Done' : isActive ? 'Processing...' : `Step ${idx + 1}`}
                   </span>
                 </div>
-                <p className="text-[11px] font-medium leading-snug">{step.label}</p>
+                <p className="text-[11px] font-semibold leading-snug">{step.label}</p>
               </div>
             );
           })}
         </div>
 
         {/* Live Status Ticker */}
-        <div className="bg-slate-950/70 border border-slate-800/80 rounded-xl px-4 py-2.5 flex items-center justify-between text-xs text-slate-300">
+        <div className="bg-white border border-[#EEDFB8] rounded-2xl px-4 py-2.5 flex items-center justify-between text-xs text-slate-700 shadow-sm">
           <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-            <span className="font-mono text-slate-400">Agent Log:</span>
-            <span className="font-medium text-slate-200">{message}</span>
+            <span className="w-2 h-2 rounded-full bg-citrus animate-ping" />
+            <span className="font-bold text-amalfitile">Agent Log:</span>
+            <span className="font-medium text-slate-800">{message}</span>
           </div>
-          <span className="text-[11px] text-slate-500 hidden sm:inline">
+          <span className="text-[11px] text-slate-500 hidden sm:inline font-medium">
             Read-only mode active
           </span>
         </div>

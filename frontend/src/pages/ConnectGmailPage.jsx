@@ -28,64 +28,60 @@ export default function ConnectGmailPage({ onConnected }) {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-950/40 via-slate-950 to-slate-950">
+    <div className="min-h-screen flex items-center justify-center p-4 bg-warmwhite">
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="max-w-lg w-full bg-slate-900/90 border border-slate-800 rounded-3xl p-8 shadow-2xl backdrop-blur-md text-center relative"
+        className="max-w-lg w-full bg-[#FDFBF5] border border-[#EEDFB8] rounded-3xl p-8 shadow-sm text-center relative"
       >
-        <div className="w-16 h-16 rounded-2xl bg-indigo-600/20 border border-indigo-500/30 mx-auto flex items-center justify-center text-indigo-400 mb-4 shadow-lg shadow-indigo-500/10">
+        <div className="w-16 h-16 rounded-2xl bg-amalfitile/15 border border-amalfitile/30 mx-auto flex items-center justify-center text-amalfitile mb-4 shadow-sm">
           <Mail className="w-8 h-8" />
         </div>
 
-        <h1 className="text-2xl font-bold text-white tracking-tight">
+        <h1 className="text-2xl font-extrabold text-amalfitile-dark tracking-tight">
           Connect Your Gmail Account
         </h1>
-        <p className="text-xs text-slate-400 mt-2 max-w-sm mx-auto leading-relaxed">
+        <p className="text-xs text-slate-600 mt-2 max-w-sm mx-auto leading-relaxed font-medium">
           Allow the multi-agent system to discover, summarize, and categorize your inbox clutter.
         </p>
 
         {/* Security & Scope Guarantee Card */}
-        <div className="bg-slate-950/80 border border-slate-800 rounded-2xl p-5 my-6 text-left space-y-3">
-          <div className="flex items-center gap-2 text-xs font-semibold text-emerald-400">
+        <div className="bg-white border border-[#EEDFB8] rounded-2xl p-5 my-6 text-left space-y-3 shadow-sm">
+          <div className="flex items-center gap-2 text-xs font-bold text-emerald-700">
             <Shield className="w-4 h-4" />
             <span>Read-Only Scope First (`gmail.readonly`)</span>
           </div>
 
-          <ul className="text-xs text-slate-300 space-y-2">
+          <ul className="text-xs text-slate-600 space-y-2 font-medium">
             <li className="flex items-start gap-2">
-              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
               <span>We cannot send, edit, or delete any emails during this step.</span>
             </li>
             <li className="flex items-start gap-2">
-              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
-              <span>Embeddings are calculated locally or within your private cluster.</span>
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
+              <span>Only message metadata, subjects, and sender addresses are parsed.</span>
             </li>
             <li className="flex items-start gap-2">
-              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
-              <span>Nothing is ever archived or deleted without your explicit review.</span>
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
+              <span>Clean actions (Archive / Trash) require separate step confirmation.</span>
             </li>
           </ul>
         </div>
 
-        {/* Connect Button */}
+        {/* Connect Action Button */}
         <button
           onClick={handleConnect}
           disabled={loading}
-          className="w-full py-3 px-6 rounded-2xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-semibold text-sm flex items-center justify-center gap-2 shadow-xl shadow-indigo-600/25 disabled:opacity-50 transition transform active:scale-95"
+          className="w-full py-3.5 px-6 rounded-2xl bg-citrus hover:bg-citrus-hover text-slate-950 font-extrabold text-sm flex items-center justify-center gap-2 shadow-citrus-hero border border-[#FFA62B] transition transform active:scale-95 disabled:opacity-50"
         >
-          {loading ? (
-            <span>Connecting to Gmail...</span>
-          ) : (
-            <>
-              <span>Connect Gmail (Read-Only)</span>
-              <ArrowRight className="w-4 h-4" />
-            </>
-          )}
+          <Sparkles className="w-4 h-4" />
+          <span>{loading ? 'Opening Google OAuth...' : 'Connect with Google'}</span>
+          <ArrowRight className="w-4 h-4" />
         </button>
 
-        <p className="text-[11px] text-slate-500 mt-4">
-          Demo Mode active: Clicking will launch the 10,000 email synthetic inbox simulation.
+        <p className="text-[11px] text-slate-500 mt-4 flex items-center justify-center gap-1 font-medium">
+          <Lock className="w-3.5 h-3.5 text-amalfitile" />
+          <span>OAuth 2.0 PKCE flow with Google Cloud Identity</span>
         </p>
       </motion.div>
     </div>

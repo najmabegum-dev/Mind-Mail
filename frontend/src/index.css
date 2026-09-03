@@ -2,6 +2,21 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --bg-primary: #FFFBF3;
+  --bg-surface: #FDFBF5;
+  --color-amalfi: #2E5AA7;
+  --color-citrus: #FFA62B;
+  --color-seabreeze: #86C5FF;
+  --color-coral: #E8543F;
+}
+
+html, body, #root {
+  background-color: #FFFBF3 !important;
+  color: #1e293b !important;
+  min-height: 100vh;
+}
+
 @layer base {
   body {
     background-color: #FFFBF3;
