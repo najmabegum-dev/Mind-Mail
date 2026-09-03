@@ -50,7 +50,7 @@ export default function Navbar({ user, onOpenStats, onOpenFeedback, onLogout }) 
               <button
                 onClick={onLogout}
                 title="Log out"
-                className="p-1.5 text-slate-400 hover:text-coralflame transition rounded-lg hover:bg-white"
+                className="p-1.5 text-slate-400 hover:text-amalfitile transition rounded-lg hover:bg-white"
               >
                 <LogOut className="w-4 h-4" />
               </button>

@@ -114,7 +114,7 @@ export default function FolderCard({ category, onSelectAction, onInspect, onToas
                     
                     <div className="flex items-center gap-1.5 shrink-0">
                       {s.is_dead_subscription && (
-                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-coralflame/15 text-coralflame border border-coralflame/25 font-bold">
+                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 border border-slate-200 font-bold">
                           Inactive
                         </span>
                       )}
@@ -142,7 +142,7 @@ export default function FolderCard({ category, onSelectAction, onInspect, onToas
                           type="button"
                           disabled={isPending}
                           onClick={(e) => handleUnsubscribe(e, s.unsubscribe_url)}
-                          className="inline-flex items-center gap-1 text-[10px] text-coralflame hover:text-coralflame-dark font-bold transition disabled:opacity-50"
+                          className="inline-flex items-center gap-1 text-[10px] text-seabreeze-dark hover:text-amalfitile font-bold transition disabled:opacity-50"
                         >
                           <span>{isPending ? 'Unsubscribing...' : 'Unsubscribe'}</span>
                           <ExternalLink className="w-2.5 h-2.5" />
@@ -190,12 +190,10 @@ export default function FolderCard({ category, onSelectAction, onInspect, onToas
             onClick={() => onSelectAction(category)}
             className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition ${
               category.needs_review
-                ? 'bg-coralflame text-white hover:bg-coralflame-hover shadow-sm'
-                : isDelete
-                ? 'bg-coralflame/15 text-coralflame hover:bg-coralflame hover:text-white border border-coralflame/30'
-                : isArchive
-                ? 'bg-amalfitile text-white hover:bg-amalfitile-hover shadow-sm'
-                : 'bg-emerald-600 text-white hover:bg-emerald-700 shadow-sm'
+                ? 'bg-coralflame text-white hover:bg-coralflame-hover shadow-coral-alert'
+                : isKeep
+                ? 'bg-emerald-600 text-white hover:bg-emerald-700 shadow-sm'
+                : 'bg-amalfitile text-white hover:bg-amalfitile-hover shadow-sm'
             }`}
           >
             <span className="capitalize">{category.needs_review ? 'Review' : category.suggested_action}</span>
