@@ -16,8 +16,7 @@ const DEFAULT_SLIDES = [
   { id: 5, url: '/slideshow/slide-5.jpg' },
 ];
 
-const ONE_MINUTE_MS = 60000; // 1 minute interval per picture
-const TICK_INTERVAL_MS = 200; // smooth progress update
+const SLIDE_INTERVAL_MS = 30000; // 30 seconds interval per picture
 
 export default function AuthPage({ onAuthSuccess }) {
   const [isSignup, setIsSignup] = useState(true);
@@ -28,38 +27,25 @@ export default function AuthPage({ onAuthSuccess }) {
   const [socialLoading, setSocialLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // 1-Minute Photo Element Slider State
+  // 30-Second Slideshow State
   const [slides] = useState(DEFAULT_SLIDES);
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
-  const [elapsedMs, setElapsedMs] = useState(0);
 
-  // 1-Minute Auto-rotation Timer
+  // 30-Second Auto-rotation Timer
   useEffect(() => {
-    const interval = setInterval(() => {
-      setElapsedMs((prev) => {
-        const next = prev + TICK_INTERVAL_MS;
-        if (next >= ONE_MINUTE_MS) {
-          // Advance to next picture every 1 minute
-          setCurrentSlideIndex((curr) => (curr + 1) % slides.length);
-          return 0;
-        }
-        return next;
-      });
-    }, TICK_INTERVAL_MS);
+    const timer = setInterval(() => {
+      setCurrentSlideIndex((curr) => (curr + 1) % slides.length);
+    }, SLIDE_INTERVAL_MS);
 
-    return () => clearInterval(interval);
+    return () => clearInterval(timer);
   }, [slides.length]);
-
-  const progressPercent = Math.min(100, (elapsedMs / ONE_MINUTE_MS) * 100);
 
   const handleNextSlide = () => {
     setCurrentSlideIndex((prev) => (prev + 1) % slides.length);
-    setElapsedMs(0);
   };
 
   const handlePrevSlide = () => {
     setCurrentSlideIndex((prev) => (prev - 1 + slides.length) % slides.length);
-    setElapsedMs(0);
   };
 
   // Form Submit Handler
@@ -149,7 +135,7 @@ export default function AuthPage({ onAuthSuccess }) {
         className="w-full max-w-5xl bg-[#18191B] text-white rounded-[32px] sm:rounded-[40px] border border-white/10 shadow-2xl overflow-hidden grid grid-cols-1 lg:grid-cols-2 items-stretch"
       >
         {/* LEFT COLUMN: Clean Form Area with balanced padding */}
-        <div className="p-8 sm:p-10 lg:p-12 flex flex-col justify-between h-full">
+        <div className="p-6 sm:p-10 lg:p-12 flex flex-col justify-between h-full order-last lg:order-first">
           {/* Top Navigation Row */}
           <div className="flex items-center justify-between gap-4 mb-8">
             {/* MailMind Brand Icon */}
@@ -317,8 +303,8 @@ export default function AuthPage({ onAuthSuccess }) {
           </p>
         </div>
 
-        {/* RIGHT HALF: Seamless edge-to-edge photo filling exactly half of the big box (NO inner small box, NO text) */}
-        <div className="relative w-full h-[400px] sm:h-[480px] lg:h-full min-h-[520px] bg-[#121315] overflow-hidden group">
+        {/* RIGHT HALF: Seamless edge-to-edge photo filling half of big box on desktop, top banner on mobile (NO text, NO video bar) */}
+        <div className="relative w-full h-[220px] sm:h-[300px] lg:h-full min-h-0 lg:min-h-[540px] bg-[#121315] overflow-hidden group order-first lg:order-last">
           
           {/* Dynamic Background Image with Smooth Crossfade */}
           <AnimatePresence mode="wait">
@@ -338,35 +324,26 @@ export default function AuthPage({ onAuthSuccess }) {
             </motion.div>
           </AnimatePresence>
 
-          {/* Subtle Prev/Next hover navigation arrows (clean icons only, NO text) */}
-          <div className="absolute inset-y-0 left-0 flex items-center p-3 opacity-0 group-hover:opacity-100 transition-opacity">
+          {/* Subtle Prev/Next navigation arrows (clean icons only, NO text) */}
+          <div className="absolute inset-y-0 left-0 flex items-center p-3 opacity-60 lg:opacity-0 group-hover:opacity-100 transition-opacity">
             <button
               type="button"
               onClick={handlePrevSlide}
               aria-label="Previous photo"
-              className="w-9 h-9 rounded-full bg-black/40 hover:bg-black/70 backdrop-blur-md text-white flex items-center justify-center transition border border-white/10"
+              className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-black/40 hover:bg-black/70 backdrop-blur-md text-white flex items-center justify-center transition border border-white/10 shadow-sm"
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
           </div>
-          <div className="absolute inset-y-0 right-0 flex items-center p-3 opacity-0 group-hover:opacity-100 transition-opacity">
+          <div className="absolute inset-y-0 right-0 flex items-center p-3 opacity-60 lg:opacity-0 group-hover:opacity-100 transition-opacity">
             <button
               type="button"
               onClick={handleNextSlide}
               aria-label="Next photo"
-              className="w-9 h-9 rounded-full bg-black/40 hover:bg-black/70 backdrop-blur-md text-white flex items-center justify-center transition border border-white/10"
+              className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-black/40 hover:bg-black/70 backdrop-blur-md text-white flex items-center justify-center transition border border-white/10 shadow-sm"
             >
               <ChevronRight className="w-4 h-4" />
             </button>
-          </div>
-
-          {/* Ultra-minimal 2px line at the very bottom edge showing the 1-minute progress smoothly (zero text) */}
-          <div className="absolute bottom-0 inset-x-0 h-1 bg-black/30">
-            <motion.div
-              className="h-full bg-citrus"
-              style={{ width: `${progressPercent}%` }}
-              transition={{ ease: 'linear' }}
-            />
           </div>
 
         </div>
