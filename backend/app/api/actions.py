@@ -7,6 +7,7 @@ from typing import Dict, Any, List, Optional
 from app.models.schemas import ActionApprovalRequest, ActionApprovalResponse
 from app.services.gmail_service import gmail_service
 from app.database import mock_db, db_manager
+from app.api.tier import get_or_create_profile, calculate_period_usage
 
 router = APIRouter(prefix="/actions", tags=["Actions"])
 
@@ -15,6 +16,7 @@ async def approve_action(req: ActionApprovalRequest, user_id: str = "demo-user-1
     """
     Executes user-approved action (archive, 30-day trash/delete, or keep)
     across the cluster or selected email IDs.
+    Gated by Free tier monthly cap (500 actions/month).
     """
     pipeline_output = mock_db.get("last_pipeline_output", {})
     clusters = pipeline_output.get("clusters", {})
@@ -29,6 +31,19 @@ async def approve_action(req: ActionApprovalRequest, user_id: str = "demo-user-1
 
     email_ids = [e.get("id") for e in target_emails]
     count = len(email_ids)
+
+    # Server-side Tier Gating: Free tier is capped at 500 actions per 30-day period
+    profile = get_or_create_profile(user_id)
+    tier = profile.get("tier", "free")
+    if tier == "free" and req.action in ["archive", "delete"]:
+        used = calculate_period_usage(user_id)
+        if used + count > 500:
+            remaining = max(0, 500 - used)
+            raise HTTPException(
+                status_code=403,
+                detail=f"Free tier monthly cap reached. You have {remaining} actions remaining out of 500 this period. Upgrade to Clarity for unlimited actions."
+            )
+
     storage_freed = round((count * 45) / 1024, 2) if req.action in ["archive", "delete"] else 0.0
 
     # Execute against Gmail API
@@ -105,11 +120,27 @@ async def bulk_approve_actions(req: BulkActionRequest, user_id: str = "demo-user
         all_email_ids.extend(e_ids)
         total_emails += len(e_ids)
 
-        if req.action == "delete":
-            cluster["emails"] = []
-        elif req.action == "archive":
-            for e in emails:
-                e["is_archived"] = True
+    # Server-side Tier Gating: Free tier is capped at 500 actions per 30-day period
+    profile = get_or_create_profile(user_id)
+    tier = profile.get("tier", "free")
+    if tier == "free" and req.action in ["archive", "delete"]:
+        used = calculate_period_usage(user_id)
+        if used + total_emails > 500:
+            remaining = max(0, 500 - used)
+            raise HTTPException(
+                status_code=403,
+                detail=f"Free tier monthly cap reached ({used}/500 used). Selected action on {total_emails} emails exceeds your remaining {remaining} free actions. Upgrade to Clarity for unlimited actions."
+            )
+
+    if req.action == "delete":
+        for c_id in req.cluster_ids:
+            if c_id in clusters:
+                clusters[c_id]["emails"] = []
+    elif req.action == "archive":
+        for c_id in req.cluster_ids:
+            if c_id in clusters:
+                for e in clusters[c_id].get("emails", []):
+                    e["is_archived"] = True
 
     storage_freed = round((total_emails * 45) / 1024, 2) if req.action in ["archive", "delete"] else 0.0
 

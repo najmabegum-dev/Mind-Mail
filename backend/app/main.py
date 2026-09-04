@@ -5,7 +5,7 @@ Orchestrates REST API endpoints, CORS middleware, and background agent jobs.
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
-from app.api import auth, gmail, scan, categories, actions, feedback
+from app.api import auth, gmail, scan, categories, actions, feedback, tier, ai_features
 
 app = FastAPI(
     title=f"{settings.PROJECT_NAME} Backend",
@@ -29,6 +29,8 @@ app.include_router(scan.router)
 app.include_router(categories.router)
 app.include_router(actions.router)
 app.include_router(feedback.router)
+app.include_router(tier.router)
+app.include_router(ai_features.router)
 
 @app.get("/")
 async def root():

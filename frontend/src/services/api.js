@@ -65,4 +65,24 @@ export const feedbackApi = {
   getStats: () => apiClient.get('/stats'),
 };
 
+export const tierApi = {
+  getProfile: (userId = 'demo-user-1') => 
+    apiClient.get(`/tier/profile?user_id=${encodeURIComponent(userId)}`),
+  getUsage: (userId = 'demo-user-1') => 
+    apiClient.get(`/tier/usage?user_id=${encodeURIComponent(userId)}`),
+  upgradeTier: (data) => 
+    apiClient.post('/tier/upgrade', data),
+  configureByoKey: (data) => 
+    apiClient.post('/tier/byo-key', data),
+};
+
+export const aiFeaturesApi = {
+  chatWithInbox: (data) => 
+    apiClient.post('/ai/chat', data),
+  generateDraft: (data) => 
+    apiClient.post('/ai/draft', data),
+  approveAndSendDraft: (data) => 
+    apiClient.post('/ai/approve-and-send', data),
+};
+
 export default apiClient;

@@ -107,3 +107,71 @@ class FeedbackResponse(BaseModel):
     rating: Optional[int] = None
     is_public: bool = True
     created_at: str
+
+# Tier & Billing Schemas
+class TierUpgradeRequest(BaseModel):
+    user_id: str
+    tier: str # "free", "clarity", "autopilot"
+    billing_cycle: Optional[str] = "monthly" # "monthly" or "annual"
+
+class ByoKeyRequest(BaseModel):
+    user_id: str
+    provider: str # "openai", "gemini", "anthropic"
+    api_key: str
+
+class UserProfileResponse(BaseModel):
+    user_id: str
+    email: str
+    display_name: str
+    tier: str = "free" # "free", "clarity", "autopilot"
+    subscription_status: str = "active"
+    byo_key_configured: bool = False
+    byo_provider: Optional[str] = None
+    action_count_this_period: int = 0
+    action_limit: int = 500 # 500 for free, -1 for unlimited
+    period_start: str
+    period_end: str
+
+# AI Clarity Chatbot Schemas
+class ChatCitation(BaseModel):
+    email_id: str
+    sender: str
+    subject: str
+    date: Optional[str] = None
+    snippet: str
+
+class ChatQueryRequest(BaseModel):
+    user_id: str
+    query: str
+
+class ChatQueryResponse(BaseModel):
+    query: str
+    answer: str
+    citations: List[ChatCitation] = []
+    tier_used: str
+
+# AI Autopilot Email Draft Schemas
+class DraftEmailRequest(BaseModel):
+    user_id: str
+    instruction: str # e.g. "Politely decline recruiter interview for next week"
+    reply_to_email_id: Optional[str] = None
+    recipient_email: Optional[str] = None
+    tone: Optional[str] = "professional" # "professional", "concise", "friendly"
+
+class DraftEmailResponse(BaseModel):
+    draft_id: str
+    recipient: str
+    subject: str
+    body: str
+    status: str = "pending_review" # "pending_review", "approved", "sent"
+    reasoning: str
+    mandatory_review_notice: str = "Review before sending — MailMind never sends without your explicit 1-tap confirmation."
+
+class ApproveDraftRequest(BaseModel):
+    user_id: str
+    draft_id: str
+    approved: bool
+    final_subject: str
+    final_body: str
+    send_now: bool = False # If true, creates draft and sends; if false, saves as draft in Gmail
+

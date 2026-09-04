@@ -15,12 +15,20 @@ import ActionQueueModal from '../components/ActionQueueModal';
 import FeedbackWidget from '../components/FeedbackWidget';
 import StatsLeaderboard from '../components/StatsLeaderboard';
 import EmailInspectorDrawer from '../components/EmailInspectorDrawer';
-import { scanApi, categoriesApi, actionsApi, profileApi, gmailApi } from '../services/api';
+import PricingModal from '../components/PricingModal';
+import InboxChatbotDrawer from '../components/InboxChatbotDrawer';
+import AutopilotDraftModal from '../components/AutopilotDraftModal';
+import { scanApi, categoriesApi, actionsApi, profileApi, gmailApi, tierApi } from '../services/api';
 
 export default function DashboardPage({ user, onLogout }) {
   const [categories, setCategories] = useState([]);
   const [rollups, setRollups] = useState([]);
   const [loadingCategories, setLoadingCategories] = useState(true);
+  const [userTier, setUserTier] = useState('free');
+  const [usageInfo, setUsageInfo] = useState(null);
+  const [isPricingOpen, setIsPricingOpen] = useState(false);
+  const [isChatOpen, setIsChatOpen] = useState(false);
+  const [isDraftOpen, setIsDraftOpen] = useState(false);
   const [isScanning, setIsScanning] = useState(false);
   const [scanProgress, setScanProgress] = useState(0);
   const [scanMessage, setScanMessage] = useState('Initializing agent scan...');
@@ -100,10 +108,24 @@ export default function DashboardPage({ user, onLogout }) {
     }
   };
 
+  const fetchTierInfo = async () => {
+    try {
+      const [profRes, usageRes] = await Promise.all([
+        tierApi.getProfile(user?.id || 'demo-user-1'),
+        tierApi.getUsage(user?.id || 'demo-user-1')
+      ]);
+      if (profRes.data?.tier) setUserTier(profRes.data.tier);
+      if (usageRes.data) setUsageInfo(usageRes.data);
+    } catch (err) {
+      console.error("Failed to fetch tier info:", err);
+    }
+  };
+
   useEffect(() => {
     fetchProfileStats();
     fetchRangeMetrics();
     fetchCategories();
+    fetchTierInfo();
   }, []);
 
   // Scan Limit / Depth (1000, 3000, 5000, 10000)
@@ -217,9 +239,15 @@ export default function DashboardPage({ user, onLogout }) {
       fetchCategories();
       fetchProfileStats();
       fetchRangeMetrics();
+      fetchTierInfo();
     } catch (err) {
       console.error("Action error:", err);
-      showToast("Could not complete action.");
+      if (err.response?.status === 403) {
+        showToast(err.response?.data?.detail || "Monthly action cap reached. Upgrade to Clarity for unlimited actions.");
+        setIsPricingOpen(true);
+      } else {
+        showToast("Could not complete action.");
+      }
     } finally {
       setIsExecutingAction(false);
     }
@@ -265,9 +293,15 @@ export default function DashboardPage({ user, onLogout }) {
       fetchCategories();
       fetchProfileStats();
       fetchRangeMetrics();
+      fetchTierInfo();
     } catch (err) {
       console.error("Bulk action failed:", err);
-      showToast("Could not complete bulk action.");
+      if (err.response?.status === 403) {
+        showToast(err.response?.data?.detail || "Monthly action cap reached. Upgrade to Clarity for unlimited actions.");
+        setIsPricingOpen(true);
+      } else {
+        showToast("Could not complete bulk action.");
+      }
     } finally {
       setIsExecutingAction(false);
     }
@@ -303,6 +337,10 @@ export default function DashboardPage({ user, onLogout }) {
     <div className="min-h-screen bg-warmwhite text-slate-900 flex flex-col selection:bg-citrus selection:text-slate-950">
       <Navbar
         user={user}
+        currentTier={userTier}
+        onOpenPricing={() => setIsPricingOpen(true)}
+        onOpenChat={() => setIsChatOpen(true)}
+        onOpenDraft={() => setIsDraftOpen(true)}
         onOpenStats={() => setIsStatsOpen(true)}
         onOpenFeedback={() => setIsFeedbackOpen(true)}
         onLogout={onLogout}
@@ -824,13 +862,16 @@ export default function DashboardPage({ user, onLogout }) {
         )}
       </main>
 
-      {/* Floating Bulk Action Bar with Persistent Running Total */}
+      {/* Floating Bulk Action Bar with Persistent Running Total & Tier Quota */}
       <BulkActionBar
         selectedClusters={selectedClustersList}
         totalSelectedEmails={totalSelectedEmails}
         totalSelectedStorageMb={totalSelectedStorageMb}
         hasSensitiveSelected={hasSensitiveSelected}
         isExecuting={isExecutingAction}
+        currentTier={userTier}
+        usageInfo={usageInfo}
+        onOpenPricing={() => setIsPricingOpen(true)}
         onExecuteBulkAction={handleExecuteBulkAction}
         onClearSelection={() => setSelectedClusterIds([])}
       />
@@ -850,6 +891,38 @@ export default function DashboardPage({ user, onLogout }) {
         isOpen={isInspectDrawerOpen}
         onClose={() => setIsInspectDrawerOpen(false)}
         onSelectAction={handleOpenActionModal}
+      />
+
+      {/* Pricing & Plan Gating Modal */}
+      <PricingModal
+        isOpen={isPricingOpen}
+        onClose={() => setIsPricingOpen(false)}
+        currentTier={userTier}
+        userId={user?.id || 'demo-user-1'}
+        onTierUpdated={(newTier) => {
+          setUserTier(newTier);
+          fetchTierInfo();
+        }}
+        onToast={showToast}
+      />
+
+      {/* Clarity / Autopilot Inbox Q&A Chatbot Drawer */}
+      <InboxChatbotDrawer
+        isOpen={isChatOpen}
+        onClose={() => setIsChatOpen(false)}
+        currentTier={userTier}
+        userId={user?.id || 'demo-user-1'}
+        onOpenPricing={() => setIsPricingOpen(true)}
+      />
+
+      {/* Autopilot AI Draft Assistant Modal (Mandatory Draft-then-Approve) */}
+      <AutopilotDraftModal
+        isOpen={isDraftOpen}
+        onClose={() => setIsDraftOpen(false)}
+        currentTier={userTier}
+        userId={user?.id || 'demo-user-1'}
+        onOpenPricing={() => setIsPricingOpen(true)}
+        onToast={showToast}
       />
 
       {/* Feedback Widget Modal */}
