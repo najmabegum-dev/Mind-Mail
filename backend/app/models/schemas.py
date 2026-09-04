@@ -175,3 +175,61 @@ class ApproveDraftRequest(BaseModel):
     final_body: str
     send_now: bool = False # If true, creates draft and sends; if false, saves as draft in Gmail
 
+# Scheduled Rescan Schemas (Autopilot Tier)
+class ScheduleRescanRequest(BaseModel):
+    user_id: str
+    enabled: bool = True
+    frequency: str = "weekly" # "weekly", "biweekly", "monthly"
+    preferred_day: str = "Sunday" # "Monday" .. "Sunday"
+    preferred_hour_utc: int = 6 # 0-23
+    send_email_digest: bool = True
+
+class ScheduleRescanResponse(BaseModel):
+    user_id: str
+    enabled: bool
+    frequency: str
+    preferred_day: str
+    preferred_hour_utc: int
+    send_email_digest: bool
+    next_run: str
+    last_run: Optional[str] = None
+    status: str = "active"
+
+# Smart Unsubscribe Assistant Schemas
+class UnsubscribeSuggestion(BaseModel):
+    id: str
+    sender_name: str
+    sender_email: str
+    domain: str
+    cluster_name: str
+    email_count: int
+    estimated_size_mb: float
+    unsubscribe_url: Optional[str] = None
+    one_click_mailto: Optional[str] = None
+    suggested_action: str = "unsubscribe_and_archive" # "unsubscribe_and_archive", "keep", "delete"
+
+class UnsubscribeSuggestionsResponse(BaseModel):
+    total_subscriptions: int
+    estimated_monthly_noise_count: int
+    suggestions: List[UnsubscribeSuggestion] = []
+
+# Action-Item & Deadline Extraction Schemas
+class ActionItem(BaseModel):
+    id: str
+    email_id: str
+    subject: str
+    sender: str
+    sender_email: str
+    date: str
+    action_type: str # "invoice_due", "interview_reply", "meeting_request", "action_required", "follow_up"
+    action_description: str
+    deadline: Optional[str] = None
+    urgency: str = "medium" # "high", "medium", "low"
+    needs_draft: bool = True
+
+class ActionItemsResponse(BaseModel):
+    total_action_items: int
+    urgent_count: int
+    action_items: List[ActionItem] = []
+
+

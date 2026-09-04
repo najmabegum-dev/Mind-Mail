@@ -18,6 +18,9 @@ import EmailInspectorDrawer from '../components/EmailInspectorDrawer';
 import PricingModal from '../components/PricingModal';
 import InboxChatbotDrawer from '../components/InboxChatbotDrawer';
 import AutopilotDraftModal from '../components/AutopilotDraftModal';
+import UnsubscribeModal from '../components/UnsubscribeModal';
+import ActionItemsDrawer from '../components/ActionItemsDrawer';
+import ScheduledRescanModal from '../components/ScheduledRescanModal';
 import { scanApi, categoriesApi, actionsApi, profileApi, gmailApi, tierApi } from '../services/api';
 
 export default function DashboardPage({ user, onLogout }) {
@@ -29,6 +32,9 @@ export default function DashboardPage({ user, onLogout }) {
   const [isPricingOpen, setIsPricingOpen] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [isDraftOpen, setIsDraftOpen] = useState(false);
+  const [isUnsubscribeOpen, setIsUnsubscribeOpen] = useState(false);
+  const [isActionItemsOpen, setIsActionItemsOpen] = useState(false);
+  const [isRescanModalOpen, setIsRescanModalOpen] = useState(false);
   const [isScanning, setIsScanning] = useState(false);
   const [scanProgress, setScanProgress] = useState(0);
   const [scanMessage, setScanMessage] = useState('Initializing agent scan...');
@@ -333,6 +339,12 @@ export default function DashboardPage({ user, onLogout }) {
   const totalSelectedStorageMb = selectedClustersList.reduce((acc, c) => acc + c.estimated_size_mb, 0);
   const hasSensitiveSelected = selectedClustersList.some(c => c.needs_review);
 
+  const handleExportReport = () => {
+    const url = actionsApi.getExportReportUrl(user?.id || 'demo-user-1', 'csv');
+    window.open(url, '_blank');
+    showToast("Generating and downloading CSV audit report...");
+  };
+
   return (
     <div className="min-h-screen bg-warmwhite text-slate-900 flex flex-col selection:bg-citrus selection:text-slate-950">
       <Navbar
@@ -341,6 +353,10 @@ export default function DashboardPage({ user, onLogout }) {
         onOpenPricing={() => setIsPricingOpen(true)}
         onOpenChat={() => setIsChatOpen(true)}
         onOpenDraft={() => setIsDraftOpen(true)}
+        onOpenActionItems={() => setIsActionItemsOpen(true)}
+        onOpenUnsubscribe={() => setIsUnsubscribeOpen(true)}
+        onOpenScheduleRescan={() => setIsRescanModalOpen(true)}
+        onExportReport={handleExportReport}
         onOpenStats={() => setIsStatsOpen(true)}
         onOpenFeedback={() => setIsFeedbackOpen(true)}
         onLogout={onLogout}
@@ -936,6 +952,36 @@ export default function DashboardPage({ user, onLogout }) {
       <StatsLeaderboard
         isOpen={isStatsOpen}
         onClose={() => setIsStatsOpen(false)}
+      />
+
+      {/* Smart Unsubscribe Assistant Modal */}
+      <UnsubscribeModal
+        isOpen={isUnsubscribeOpen}
+        onClose={() => setIsUnsubscribeOpen(false)}
+        userId={user?.id || 'demo-user-1'}
+        onActionCompleted={() => {
+          fetchCategories();
+          showToast("Unsubscribe request processed.");
+        }}
+      />
+
+      {/* Action Items & Deadlines Slide-over Drawer */}
+      <ActionItemsDrawer
+        isOpen={isActionItemsOpen}
+        onClose={() => setIsActionItemsOpen(false)}
+        userId={user?.id || 'demo-user-1'}
+        onOpenDraftModal={(draftData) => {
+          setIsDraftOpen(true);
+        }}
+      />
+
+      {/* Scheduled Background Rescans Modal (Autopilot) */}
+      <ScheduledRescanModal
+        isOpen={isRescanModalOpen}
+        onClose={() => setIsRescanModalOpen(false)}
+        userTier={userTier}
+        userId={user?.id || 'demo-user-1'}
+        onOpenPricing={() => setIsPricingOpen(true)}
       />
     </div>
   );

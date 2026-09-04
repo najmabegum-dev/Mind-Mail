@@ -51,12 +51,16 @@ export const categoriesApi = {
 };
 
 export const actionsApi = {
-  approveAction: (data) => 
-    apiClient.post('/actions/approve', data),
-  bulkApproveAction: (data) => 
-    apiClient.post('/actions/bulk-approve', data),
+  approveAction: (data, userId = 'demo-user-1') => 
+    apiClient.post(`/actions/approve?user_id=${encodeURIComponent(userId)}`, data),
+  bulkApprove: (data, userId = 'demo-user-1') => 
+    apiClient.post(`/actions/bulk-approve?user_id=${encodeURIComponent(userId)}`, data),
   unsubscribe: (data) => 
     apiClient.post('/actions/unsubscribe', data),
+  getExportReportUrl: (userId = 'demo-user-1', format = 'csv') => 
+    `http://127.0.0.1:8000/actions/export-report?user_id=${encodeURIComponent(userId)}&format=${format}`,
+  exportReport: (userId = 'demo-user-1', format = 'csv') =>
+    apiClient.get(`/actions/export-report?user_id=${encodeURIComponent(userId)}&format=${format}`),
 };
 
 export const feedbackApi = {
@@ -74,6 +78,10 @@ export const tierApi = {
     apiClient.post('/tier/upgrade', data),
   configureByoKey: (data) => 
     apiClient.post('/tier/byo-key', data),
+  getScheduledRescan: (userId = 'demo-user-1') =>
+    apiClient.get(`/tier/schedule-rescan?user_id=${encodeURIComponent(userId)}`),
+  updateScheduledRescan: (data) =>
+    apiClient.post('/tier/schedule-rescan', data),
 };
 
 export const aiFeaturesApi = {
@@ -83,6 +91,10 @@ export const aiFeaturesApi = {
     apiClient.post('/ai/draft', data),
   approveAndSendDraft: (data) => 
     apiClient.post('/ai/approve-and-send', data),
+  getUnsubscribeSuggestions: (userId = 'demo-user-1') =>
+    apiClient.get(`/ai/unsubscribe-suggestions?user_id=${encodeURIComponent(userId)}`),
+  getActionItems: (userId = 'demo-user-1') =>
+    apiClient.get(`/ai/action-items?user_id=${encodeURIComponent(userId)}`),
 };
 
 export default apiClient;

@@ -4,6 +4,7 @@ Executes user-approved archive or delete calls against the Gmail API and records
 """
 from fastapi import APIRouter, HTTPException
 from typing import Dict, Any, List, Optional
+from datetime import datetime
 from app.models.schemas import ActionApprovalRequest, ActionApprovalResponse
 from app.services.gmail_service import gmail_service
 from app.database import mock_db, db_manager
@@ -212,3 +213,90 @@ async def handle_unsubscribe(req: UnsubscribeRequest):
         "url": url,
         "message": "Open web unsubscribe destination."
     }
+
+# ==========================================
+# Exportable Audit & Storage Report (CSV/JSON)
+# ==========================================
+from fastapi.responses import Response
+
+@router.get("/export-report")
+async def export_audit_report(user_id: str = "demo-user-1", format: str = "csv"):
+    """
+    Generates downloadable audit report of scanned clusters, actions taken,
+    storage freed, and safety flags.
+    """
+    profile = get_or_create_profile(user_id)
+    tier = profile.get("tier", "free")
+    pipeline_output = mock_db.get("last_pipeline_output", {})
+    clusters = pipeline_output.get("clusters", {})
+    logs = [l for l in mock_db.get("usage_logs", []) if l.get("user_id") == user_id]
+
+    now = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC")
+
+    if format.lower() == "csv":
+        import io
+        import csv
+
+        output = io.StringIO()
+        writer = csv.writer(output)
+
+        # Header summary
+        writer.writerow(["MAILMIND INBOX AUDIT & STORAGE REPORT"])
+        writer.writerow(["Generated At", now])
+        writer.writerow(["User ID", user_id])
+        writer.writerow(["Active Tier", tier.capitalize()])
+        writer.writerow([])
+
+        # Section 1: Cluster breakdown
+        writer.writerow(["CLUSTER SUMMARY"])
+        writer.writerow(["Cluster Name", "Email Count", "Est. Size (MB)", "Safety Class", "Action Recommendation"])
+        for c_id, c in clusters.items():
+            emails = c.get("emails", [])
+            writer.writerow([
+                c.get("name", c_id),
+                len(emails),
+                round(len(emails) * 0.25, 2),
+                c.get("safety_class", "normal"),
+                c.get("suggested_action", "review")
+            ])
+        writer.writerow([])
+
+        # Section 2: Action Log
+        writer.writerow(["EXECUTED ACTIONS LOG"])
+        writer.writerow(["Timestamp", "Action Type", "Emails Affected", "Storage Freed (MB)"])
+        total_freed = 0.0
+        total_affected = 0
+        for l in logs:
+            meta = l.get("metadata", {})
+            affected = meta.get("emails_affected", 1)
+            freed = meta.get("storage_freed_mb", 0.0)
+            total_affected += affected
+            total_freed += freed
+            writer.writerow([
+                meta.get("timestamp", now),
+                l.get("action", ""),
+                affected,
+                freed
+            ])
+        writer.writerow([])
+        writer.writerow(["TOTALS", "", total_affected, round(total_freed, 2)])
+
+        csv_content = output.getvalue()
+        return Response(
+            content=csv_content,
+            media_type="text/csv",
+            headers={
+                "Content-Disposition": f"attachment; filename=mailmind_audit_report_{datetime.utcnow().strftime('%Y%m%d')}.csv"
+            }
+        )
+
+    # JSON response
+    return {
+        "report_generated_at": now,
+        "user_id": user_id,
+        "tier": tier,
+        "clusters_count": len(clusters),
+        "total_actions_logged": len(logs),
+        "logs": logs
+    }
+

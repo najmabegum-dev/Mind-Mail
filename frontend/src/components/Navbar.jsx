@@ -1,5 +1,5 @@
 import React from 'react';
-import { Mail, Sparkles, LogOut, BarChart3, Bot, Send, Zap } from 'lucide-react';
+import { Mail, Sparkles, LogOut, BarChart3, Bot, Send, Zap, CheckSquare, BellOff, Download, Calendar } from 'lucide-react';
 
 export default function Navbar({ 
   user, 
@@ -7,6 +7,10 @@ export default function Navbar({
   onOpenPricing, 
   onOpenChat, 
   onOpenDraft, 
+  onOpenActionItems,
+  onOpenUnsubscribe,
+  onOpenScheduleRescan,
+  onExportReport,
   onOpenStats, 
   onOpenFeedback, 
   onLogout 
@@ -48,35 +52,75 @@ export default function Navbar({
         </div>
 
         {/* Action Controls */}
-        <div className="flex items-center gap-1.5 sm:gap-2.5">
+        <div className="flex items-center gap-1.5 sm:gap-2">
+          {/* Action Items Drawer Trigger */}
+          <button
+            onClick={onOpenActionItems}
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-bold bg-white hover:bg-slate-100 text-slate-800 border border-slate-200 shadow-sm transition"
+            title="View extracted deadlines, invoices, and obligations"
+          >
+            <CheckSquare className="w-3.5 h-3.5 text-citrus" />
+            <span className="hidden xl:inline">Action Items</span>
+          </button>
+
+          {/* Unsubscribe Assistant Trigger */}
+          <button
+            onClick={onOpenUnsubscribe}
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-bold bg-white hover:bg-slate-100 text-slate-800 border border-slate-200 shadow-sm transition"
+            title="1-click unsubscribe assistant for newsletters and marketing"
+          >
+            <BellOff className="w-3.5 h-3.5 text-amalfitile" />
+            <span className="hidden xl:inline">Unsubscribe</span>
+          </button>
+
           {/* Ask Inbox (AI Chatbot) */}
           <button
             onClick={onOpenChat}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-white hover:bg-seabreeze/15 text-amalfitile-dark border border-[#EEDFB8] shadow-sm transition"
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-bold bg-white hover:bg-seabreeze/15 text-amalfitile-dark border border-slate-200 shadow-sm transition"
             title="Ask questions about your scanned email threads"
           >
             <Bot className="w-3.5 h-3.5 text-amalfitile" />
-            <span className="hidden sm:inline">Ask Inbox</span>
+            <span className="hidden md:inline">Ask Inbox</span>
           </button>
 
           {/* AI Draft Assistant */}
           <button
             onClick={onOpenDraft}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-white hover:bg-citrus/15 text-slate-900 border border-[#EEDFB8] shadow-sm transition"
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-bold bg-white hover:bg-citrus/15 text-slate-900 border border-slate-200 shadow-sm transition"
             title="Draft email responses with 1-tap approval"
           >
             <Sparkles className="w-3.5 h-3.5 text-citrus" />
-            <span className="hidden sm:inline">Draft Assistant</span>
+            <span className="hidden md:inline">Draft</span>
           </button>
 
-          {/* Pricing Button */}
+          {/* Schedule Rescans */}
+          <button
+            onClick={onOpenScheduleRescan}
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-bold bg-white hover:bg-slate-100 text-slate-800 border border-slate-200 shadow-sm transition"
+            title="Configure automated background rescans (Autopilot)"
+          >
+            <Calendar className="w-3.5 h-3.5 text-slate-600" />
+            <span className="hidden lg:inline">Schedule</span>
+          </button>
+
+          {/* Export CSV Audit Report */}
+          <button
+            onClick={onExportReport}
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-bold bg-white hover:bg-slate-100 text-slate-800 border border-slate-200 shadow-sm transition"
+            title="Download CSV audit report of scanned clusters & storage freed"
+          >
+            <Download className="w-3.5 h-3.5 text-slate-600" />
+            <span className="hidden lg:inline">Export</span>
+          </button>
+
+          {/* Plans Button */}
           <button
             onClick={onOpenPricing}
             className="flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-extrabold bg-citrus hover:bg-citrus-hover text-slate-950 shadow-citrus-hero border border-[#FFA62B] transition transform active:scale-95"
             title="View Free, Clarity, and Autopilot subscription tiers"
           >
             <Zap className="w-3.5 h-3.5" />
-            <span className="hidden md:inline">Plans</span>
+            <span className="hidden sm:inline">Plans</span>
           </button>
 
           <div className="h-4 w-px bg-amber-900/15 mx-1 hidden sm:block" />

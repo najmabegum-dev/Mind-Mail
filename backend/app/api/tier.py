@@ -200,3 +200,91 @@ async def configure_byo_key(req: ByoKeyRequest):
         "masked_key": masked_key,
         "message": f"BYO API key for {req.provider.upper()} saved successfully."
     }
+
+# ==========================================
+# Scheduled Automatic Rescans (Autopilot Tier)
+# ==========================================
+from app.models.schemas import ScheduleRescanRequest, ScheduleRescanResponse
+
+@router.get("/schedule-rescan", response_model=ScheduleRescanResponse)
+async def get_schedule_rescan_settings(user_id: str = "demo-user-1"):
+    """
+    Returns scheduled rescan configuration for the user.
+    """
+    profile = get_or_create_profile(user_id)
+    sched = profile.get("scheduled_rescan", {
+        "enabled": profile.get("tier") == "autopilot",
+        "frequency": "weekly",
+        "preferred_day": "Sunday",
+        "preferred_hour_utc": 6,
+        "send_email_digest": True,
+        "last_run": (datetime.utcnow() - timedelta(days=7)).strftime("%Y-%m-%d %H:%M UTC"),
+        "status": "active"
+    })
+    
+    # Calculate next simulated run
+    next_run = (datetime.utcnow() + timedelta(days=3)).strftime("%Y-%m-%d 06:00 UTC")
+
+    return ScheduleRescanResponse(
+        user_id=user_id,
+        enabled=sched.get("enabled", False),
+        frequency=sched.get("frequency", "weekly"),
+        preferred_day=sched.get("preferred_day", "Sunday"),
+        preferred_hour_utc=sched.get("preferred_hour_utc", 6),
+        send_email_digest=sched.get("send_email_digest", True),
+        next_run=next_run,
+        last_run=sched.get("last_run"),
+        status="active" if sched.get("enabled") else "paused"
+    )
+
+@router.post("/schedule-rescan", response_model=ScheduleRescanResponse)
+async def update_schedule_rescan_settings(req: ScheduleRescanRequest):
+    """
+    Configures background rescan schedule. Gated to Autopilot tier.
+    """
+    profile = get_or_create_profile(req.user_id)
+    tier = profile.get("tier", "free")
+
+    if tier != "autopilot":
+        raise HTTPException(
+            status_code=403,
+            detail={
+                "code": "TIER_GATED_FEATURE",
+                "feature": "scheduled_rescans",
+                "required_tier": "autopilot",
+                "message": "Automated background inbox rescans and digests require the Autopilot plan ($18/mo)."
+            }
+        )
+
+    sched_data = {
+        "enabled": req.enabled,
+        "frequency": req.frequency,
+        "preferred_day": req.preferred_day,
+        "preferred_hour_utc": req.preferred_hour_utc,
+        "send_email_digest": req.send_email_digest,
+        "updated_at": datetime.utcnow().isoformat(),
+        "status": "active" if req.enabled else "paused"
+    }
+    profile["scheduled_rescan"] = sched_data
+
+    client = db_manager.get_client()
+    if client:
+        try:
+            client.table("profiles").upsert(profile).execute()
+        except Exception as e:
+            print(f"[Schedule Rescan] Error saving: {e}")
+
+    next_run = (datetime.utcnow() + timedelta(days=7)).strftime("%Y-%m-%d %H:%M UTC")
+
+    return ScheduleRescanResponse(
+        user_id=req.user_id,
+        enabled=req.enabled,
+        frequency=req.frequency,
+        preferred_day=req.preferred_day,
+        preferred_hour_utc=req.preferred_hour_utc,
+        send_email_digest=req.send_email_digest,
+        next_run=next_run,
+        last_run=datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC"),
+        status=sched_data["status"]
+    )
+
