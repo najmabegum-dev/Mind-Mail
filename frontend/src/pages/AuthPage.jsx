@@ -6,50 +6,14 @@ import {
 } from 'lucide-react';
 import { authApi, gmailApi } from '../services/api';
 
-// Curated high-resolution imagery designed to fit and adjust to the photo element
+// Your custom pictures — add more by dropping .jpg/.png files into frontend/public/slideshow/
+// and appending a new { id, url: '/slideshow/filename.jpg' } entry here.
 const DEFAULT_SLIDES = [
-  {
-    id: 1,
-    url: 'https://images.unsplash.com/photo-1533105079780-92b9be482077?auto=format&fit=crop&w=1200&q=80',
-    title: 'Clarity in Every Morning',
-    tag: 'Peace of Mind',
-    caption: 'Reclaim a peaceful, organized inbox from 20,000+ noisy marketing subscriptions.'
-  },
-  {
-    id: 2,
-    url: 'https://images.unsplash.com/photo-1497215728101-856f4ea42174?auto=format&fit=crop&w=1200&q=80',
-    title: 'Editorial Workspace Calm',
-    tag: 'Focus & Flow',
-    caption: 'Intelligent multi-agent clustering groups brand noise so you never miss important emails.'
-  },
-  {
-    id: 3,
-    url: 'https://images.unsplash.com/photo-1582281298055-e25b84a30b0b?auto=format&fit=crop&w=1200&q=80',
-    title: 'Mediterranean Citrus Simplicity',
-    tag: 'Fresh Start',
-    caption: 'Designed with warmth, intuitive hierarchy, and zero cognitive clutter.'
-  },
-  {
-    id: 4,
-    url: 'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=1200&q=80',
-    title: 'Autonomous Email Triage',
-    tag: 'Multi-Agent',
-    caption: 'LangGraph triage agents classify, summarize, and protect sensitive financial & job threads.'
-  },
-  {
-    id: 5,
-    url: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80',
-    title: 'Reclaim Storage Freedom',
-    tag: 'Space Freed',
-    caption: 'Phase-3 Attachment Offload preserves thread searchability while reclaiming gigabytes.'
-  },
-  {
-    id: 6,
-    url: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=1200&q=80',
-    title: 'Engineered for Builders',
-    tag: 'Modern Stack',
-    caption: 'FastAPI, React, Tailwind, and Vite built with robust engineering discipline.'
-  }
+  { id: 1, url: '/slideshow/slide-1.jpg' },
+  { id: 2, url: '/slideshow/slide-2.jpg' },
+  { id: 3, url: '/slideshow/slide-3.jpg' },
+  { id: 4, url: '/slideshow/slide-4.jpg' },
+  { id: 5, url: '/slideshow/slide-5.jpg' },
 ];
 
 const ONE_MINUTE_MS = 60000; // 1 minute interval per picture
@@ -396,17 +360,8 @@ export default function AuthPage({ onAuthSuccess }) {
               </motion.div>
             </AnimatePresence>
 
-            {/* Top Badge & Add Photo Control */}
-            <div className="relative z-10 p-5 sm:p-6 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] uppercase font-extrabold px-3 py-1 rounded-full bg-black/60 backdrop-blur-md text-citrus border border-white/15 tracking-wider shadow-sm">
-                  {activeSlide.tag}
-                </span>
-                <span className="text-[10px] text-white/70 bg-black/40 backdrop-blur-md px-2.5 py-1 rounded-full border border-white/10 font-mono">
-                  Changes every 1m
-                </span>
-              </div>
-
+            {/* Minimal top-right controls only (no text on pictures) */}
+            <div className="relative z-10 p-5 sm:p-6 flex items-center justify-end">
               {/* Add Custom Picture Button */}
               <button
                 type="button"
@@ -440,19 +395,8 @@ export default function AuthPage({ onAuthSuccess }) {
               </div>
             )}
 
-            {/* Bottom Controls & Slider Bar (Matching Reference) */}
-            <div className="relative z-10 p-5 sm:p-6 space-y-3">
-              {/* Slide Narrative */}
-              <div>
-                <h3 className="text-xl font-extrabold text-white tracking-tight drop-shadow-md">
-                  {activeSlide.title}
-                </h3>
-                <p className="text-xs text-slate-300 mt-1 font-medium line-clamp-2 drop-shadow leading-relaxed">
-                  {activeSlide.caption}
-                </p>
-              </div>
-
-              {/* 1-Minute Progress Bar & Player Controls (Reference II slider) */}
+            {/* Bottom: Clean progress bar & controls only (no text on pictures) */}
+            <div className="relative z-10 p-5 sm:p-6 mt-auto">
               <div className="bg-black/60 backdrop-blur-md border border-white/15 rounded-2xl p-2.5 flex items-center gap-3">
                 {/* Pause / Play Button */}
                 <button
