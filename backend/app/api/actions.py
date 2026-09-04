@@ -48,7 +48,8 @@ async def approve_action(req: ActionApprovalRequest, user_id: str = "demo-user-1
     storage_freed = round((count * 45) / 1024, 2) if req.action in ["archive", "delete"] else 0.0
 
     # Execute against Gmail API
-    gmail_service.execute_batch_action(access_token=token, message_ids=email_ids, action=req.action)
+    effective_token = token if (token and token != "mock_token") else mock_db.get("latest_gmail_token", "mock_token")
+    gmail_service.execute_batch_action(access_token=effective_token, message_ids=email_ids, action=req.action)
 
     # Record row in usage_logs table
     log_entry = {
@@ -147,7 +148,8 @@ async def bulk_approve_actions(req: BulkActionRequest, user_id: str = "demo-user
 
     # Execute against Gmail
     if all_email_ids:
-        gmail_service.execute_batch_action(access_token=token, message_ids=all_email_ids, action=req.action)
+        effective_token = token if (token and token != "mock_token") else mock_db.get("latest_gmail_token", "mock_token")
+        gmail_service.execute_batch_action(access_token=effective_token, message_ids=all_email_ids, action=req.action)
 
     # Log to usage_logs
     log_entry = {

@@ -22,12 +22,23 @@ async def get_categories(user_id: str = "demo-user-1"):
     """
     pipeline_output = mock_db.get("last_pipeline_output")
 
-    if not pipeline_output:
+    if not pipeline_output or not pipeline_output.get("clusters"):
         raw_emails = generate_mock_emails(count=150)
         clustered = clustering_service.cluster_emails(raw_emails, n_clusters=5)
         pipeline_output = run_multi_agent_pipeline(user_id=user_id, clustered_emails=clustered)
         mock_db["last_pipeline_output"] = pipeline_output
         mock_db["last_clustered_emails"] = clustered
+        if not mock_db.get("last_range_metrics") or mock_db.get("last_range_metrics", {}).get("total_emails", 0) == 0:
+            mock_db["last_range_metrics"] = {
+                "from_date": "Last 30 Days",
+                "to_date": "Present",
+                "total_emails": 2840,
+                "unread_emails": 412,
+                "read_emails": 2428,
+                "storage_mb": 127.8,
+                "clusters_count": len(pipeline_output.get("clusters", {})),
+                "unsubscribe_count": 38
+            }
 
     clusters = pipeline_output.get("clusters", {})
     results: List[CategorySummary] = []

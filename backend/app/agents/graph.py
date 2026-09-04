@@ -43,7 +43,8 @@ compiled_graph = build_agent_graph()
 
 def run_multi_agent_pipeline(user_id: str, clustered_emails: List[Dict[str, Any]]) -> Dict[str, Any]:
     """
-    Executes the multi-agent pipeline over clustered emails.
+    Executes the multi-agent pipeline over clustered emails:
+    Classifier Agent -> Summarizer Agent -> Dedup Agent -> Triage Agent.
     """
     # Group emails by cluster_id
     grouped = defaultdict(list)
@@ -68,17 +69,10 @@ def run_multi_agent_pipeline(user_id: str, clustered_emails: List[Dict[str, Any]
         "user_id": user_id,
         "raw_emails": clustered_emails,
         "clusters": clusters,
-        "logs": ["Pipeline initialized."]
+        "logs": ["Multi-agent pipeline initialized."]
     }
 
-    if compiled_graph:
-        try:
-            result = compiled_graph.invoke(initial_state)
-            return result
-        except Exception as e:
-            print(f"[LangGraph] Execution error, running step-by-step: {e}")
-
-    # Step-by-step execution fallback
+    # Sequential agent execution across Classifier, Summarizer, Dedup, Triage
     s1 = classify_clusters(initial_state)
     initial_state["clusters"].update(s1["clusters"])
     initial_state["logs"].extend(s1["logs"])

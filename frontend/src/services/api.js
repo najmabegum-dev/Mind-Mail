@@ -53,6 +53,8 @@ export const categoriesApi = {
 export const actionsApi = {
   approveAction: (data, userId = 'demo-user-1') => 
     apiClient.post(`/actions/approve?user_id=${encodeURIComponent(userId)}`, data),
+  bulkApproveAction: (data, userId = 'demo-user-1') => 
+    apiClient.post(`/actions/bulk-approve?user_id=${encodeURIComponent(userId)}`, data),
   bulkApprove: (data, userId = 'demo-user-1') => 
     apiClient.post(`/actions/bulk-approve?user_id=${encodeURIComponent(userId)}`, data),
   unsubscribe: (data) => 
