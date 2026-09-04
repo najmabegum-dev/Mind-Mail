@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 :root {
-  --bg-primary: #FFFBF3;
+  --bg-primary: #FFFFFF;
   --bg-surface: #FDFBF5;
   --color-amalfi: #2E5AA7;
   --color-citrus: #FFA62B;
@@ -12,14 +12,14 @@
 }
 
 html, body, #root {
-  background-color: #FFFBF3 !important;
+  background-color: #FFFFFF !important;
   color: #1e293b !important;
   min-height: 100vh;
 }
 
 @layer base {
   body {
-    background-color: #FFFBF3;
+    background-color: #FFFFFF;
     color: #1e293b;
     @apply font-sans;
   }

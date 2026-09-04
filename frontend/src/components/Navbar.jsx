@@ -20,7 +20,7 @@ export default function Navbar({
   const badge = tierBadges[currentTier] || tierBadges.free;
 
   return (
-    <header className="sticky top-0 z-40 border-b border-amber-900/10 bg-[#FFFBF3]/90 backdrop-blur-md">
+    <header className="sticky top-0 z-40 border-b border-slate-200/80 bg-white/90 backdrop-blur-md">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
         
         {/* Brand (Structured with Amalfi Tile #2E5AA7) */}

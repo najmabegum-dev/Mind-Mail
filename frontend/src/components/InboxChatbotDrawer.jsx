@@ -81,7 +81,7 @@ export default function InboxChatbotDrawer({
           animate={{ x: 0 }}
           exit={{ x: '100%' }}
           transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-          className="w-full max-w-xl bg-[#FFFBF3] border-l-2 border-[#EEDFB8] h-full flex flex-col shadow-2xl relative"
+          className="w-full max-w-xl bg-white border-l-2 border-slate-200 h-full flex flex-col shadow-2xl relative"
         >
           {/* Header */}
           <div className="p-5 border-b border-[#EEDFB8] bg-[#FDFBF5] flex items-center justify-between gap-4">

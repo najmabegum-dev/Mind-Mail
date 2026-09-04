@@ -138,7 +138,7 @@ export default function PricingModal({
         initial={{ opacity: 0, scale: 0.95, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 20 }}
-        className="bg-[#FFFBF3] border-2 border-[#EEDFB8] rounded-3xl max-w-5xl w-full p-6 sm:p-8 shadow-2xl relative my-8"
+        className="bg-white border-2 border-slate-200 rounded-3xl max-w-5xl w-full p-6 sm:p-8 shadow-2xl relative my-8"
       >
         {/* Modal Header */}
         <div className="flex items-start justify-between gap-4 pb-5 border-b border-[#EEDFB8]">

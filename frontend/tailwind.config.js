@@ -7,8 +7,8 @@ export default {
   theme: {
     extend: {
       colors: {
-        // MailMind Design System Palette
-        warmwhite: '#FFFBF3',
+        // Clean white background across all pages
+        warmwhite: '#FFFFFF',
         creamgelato: {
           DEFAULT: '#F8E6A0',
           tint: 'rgba(248, 230, 160, 0.12)',

@@ -45,7 +45,7 @@ export default function EmailInspectorDrawer({ cluster, isOpen, onClose, onSelec
           animate={{ x: 0 }}
           exit={{ x: '100%' }}
           transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-          className="w-full max-w-2xl bg-[#FFFBF3] border-l border-[#EEDFB8] h-full flex flex-col shadow-2xl relative"
+          className="w-full max-w-2xl bg-white border-l border-slate-200 h-full flex flex-col shadow-2xl relative"
         >
           {/* Drawer Header */}
           <div className="p-6 border-b border-[#EEDFB8] bg-[#FDFBF5] flex items-start justify-between gap-4">
